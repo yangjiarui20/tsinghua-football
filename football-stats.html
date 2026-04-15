@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>清华男足数据网</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:#f3f0f5;color:#1a1a2e;line-height:1.6;min-height:100vh}
+.header{background:linear-gradient(135deg,#660874,#4a0654);color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(102,8,116,.3)}
+.header h1{font-size:20px;font-weight:600;letter-spacing:1px}
+.header-right{display:flex;align-items:center;gap:12px}
+.header-right select,.header-right button{padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:13px;cursor:pointer}
+.header-right select option{color:#333;background:#fff}
+.header-right button:hover{background:rgba(255,255,255,.25)}
+.tabs{display:flex;background:#4a0654;padding:0 24px;gap:2px}
+.tab{padding:12px 24px;color:rgba(255,255,255,.6);cursor:pointer;font-size:14px;border-bottom:3px solid transparent;transition:.2s}
+.tab:hover{color:rgba(255,255,255,.85)}
+.tab.active{color:#fff;border-bottom-color:#d4a5e0;font-weight:600}
+.main{max-width:1200px;margin:20px auto;padding:0 20px}
+.page{display:none}.page.active{display:block}
+.card{background:#fff;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{font-size:18px;margin-bottom:16px;color:#4a0654;border-left:4px solid #660874;padding-left:12px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border:none;border-radius:6px;font-size:13px;cursor:pointer;transition:.2s;font-weight:500}
+.btn-primary{background:#660874;color:#fff}.btn-primary:hover{background:#7d1a8e}
+.btn-danger{background:#c0392b;color:#fff}.btn-danger:hover{background:#a93226}
+.btn-success{background:#27ae60;color:#fff}.btn-success:hover{background:#219a52}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-outline{background:transparent;border:1px solid #ccc;color:#555}.btn-outline:hover{border-color:#660874;color:#660874}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #eee}
+th{background:#f8f5fa;color:#555;font-weight:600;cursor:pointer;white-space:nowrap;user-select:none;position:sticky;top:0}
+th:hover{background:#f0eaf3}
+th .sort-icon{font-size:10px;margin-left:4px;color:#aaa}
+tr:hover{background:#faf5fc}
+td.num{text-align:center;font-variant-numeric:tabular-nums}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:14px;padding:28px;width:90%;max-width:700px;max-height:85vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+.modal h3{font-size:18px;margin-bottom:20px;color:#4a0654}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:12px;color:#666;font-weight:500}
+.form-group input,.form-group select{padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:#660874;box-shadow:0 0 0 3px rgba(102,8,116,.12)}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:20px}
+.stat-card{background:#fff;border-radius:10px;padding:20px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.stat-card .val{font-size:32px;font-weight:700;color:#660874}
+.stat-card .lbl{font-size:12px;color:#888;margin-top:4px}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.tag-w{background:#27ae6020;color:#27ae60}.tag-d{background:#f39c1220;color:#e67e22}.tag-l{background:#c0392b20;color:#c0392b}
+.tag-gk{background:#8e44ad20;color:#8e44ad}.tag-df{background:#2980b920;color:#2980b9}
+.tag-mf{background:#27ae6020;color:#27ae60}.tag-fw{background:#c0392b20;color:#c0392b}
+.table-scroll{overflow-x:auto;margin:0 -24px;padding:0 24px}
+.toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:8px;color:#fff;font-size:14px;z-index:300;opacity:0;transition:.3s;transform:translateY(-10px)}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast-ok{background:#27ae60}.toast-err{background:#c0392b}
+.empty{text-align:center;padding:40px;color:#aaa;font-size:14px}
+.flex-between{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.badge{display:inline-block;min-width:20px;text-align:center;padding:2px 6px;border-radius:10px;font-size:11px;font-weight:700;color:#fff;background:#660874}
+.data-actions{display:flex;gap:10px;flex-wrap:wrap}
+#importFile{display:none}
+@media(max-width:768px){
+  .form-grid{grid-template-columns:1fr}
+  .header{flex-direction:column;gap:8px}
+  .tabs{overflow-x:auto;padding:0 12px}
+  .tab{white-space:nowrap;padding:10px 16px;font-size:13px}
+  .main{padding:0 10px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1 id="siteTitle" onclick="editTitle()" style="cursor:pointer" title="点击修改网站名称">清华男足数据网</h1>
+  <div class="header-right">
+    <select id="seasonSelect" onchange="switchSeason()"></select>
+    <button onclick="openSeasonModal()">+ 新赛季</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-page="players" onclick="switchTab(this)">球员管理</div>
+  <div class="tab" data-page="matches" onclick="switchTab(this)">比赛记录</div>
+  <div class="tab" data-page="stats" onclick="switchTab(this)">球员统计</div>
+  <div class="tab" data-page="overview" onclick="switchTab(this)">球队总览</div>
+</div>
+
+<div class="main">
+
+  <!-- Page: Players -->
+  <div class="page active" id="page-players">
+    <div class="card">
+      <div class="flex-between">
+        <h2>球员花名册</h2>
+        <button class="btn btn-primary" onclick="openPlayerModal()">+ 添加球员</button>
+      </div>
+      <div class="table-scroll">
+        <table id="playerTable">
+          <thead><tr>
+            <th onclick="sortTable('playerTable',0)">号码 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th onclick="sortTable('playerTable',1)">姓名 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th onclick="sortTable('playerTable',2)">位置 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th onclick="sortTable('playerTable',3)">年龄 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th onclick="sortTable('playerTable',4)">身高 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th onclick="sortTable('playerTable',5)">体重 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th>操作</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="emptyPlayers">暂无球员，点击上方按钮添加</div>
+    </div>
+    <div class="card">
+      <h2>数据管理</h2>
+      <div class="data-actions">
+        <button class="btn btn-outline" onclick="exportData()">导出 JSON 备份</button>
+        <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">导入 JSON 备份</button>
+        <input type="file" id="importFile" accept=".json" onchange="importData(event)">
+      </div>
+    </div>
+  </div>
+
+  <!-- Page: Matches -->
+  <div class="page" id="page-matches">
+    <div class="card">
+      <div class="flex-between">
+        <h2>比赛记录</h2>
+        <button class="btn btn-primary" onclick="openMatchModal()">+ 添加比赛</button>
+      </div>
+      <div class="table-scroll">
+        <table id="matchTable">
+          <thead><tr>
+            <th onclick="sortTable('matchTable',0)">轮次 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th onclick="sortTable('matchTable',1)">日期 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th>主/客</th><th>对手</th><th>比分</th><th>半场</th><th>赛果</th><th>操作</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="emptyMatches">暂无比赛记录</div>
+    </div>
+  </div>
+
+  <!-- Page: Stats -->
+  <div class="page" id="page-stats">
+    <div class="card">
+      <h2>球员赛季统计</h2>
+      <div class="table-scroll">
+        <table id="statsTable">
+          <thead><tr>
+            <th onclick="sortTable('statsTable',0)">号码 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th onclick="sortTable('statsTable',1)">姓名 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th>位置</th>
+            <th onclick="sortTable('statsTable',3)">出场 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th onclick="sortTable('statsTable',4)">首发 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th onclick="sortTable('statsTable',5)">替补 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th onclick="sortTable('statsTable',6)">总时间 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th onclick="sortTable('statsTable',7)">场均时间 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th onclick="sortTable('statsTable',8)">进球 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th onclick="sortTable('statsTable',9)">助攻 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th onclick="sortTable('statsTable',10)">黄牌 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th onclick="sortTable('statsTable',11)">红牌 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+            <th onclick="sortTable('statsTable',12)">场均评分 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty" id="emptyStats">暂无统计数据</div>
+    </div>
+  </div>
+
+  <!-- Page: Overview -->
+  <div class="page" id="page-overview">
+    <div class="stats-row" id="overviewCards"></div>
+    <div class="card">
+      <h2>主客场分项统计</h2>
+      <div class="table-scroll">
+        <table id="venueTable">
+          <thead><tr><th></th><th>场次</th><th>胜</th><th>平</th><th>负</th><th>进球</th><th>失球</th><th>净胜球</th><th>积分</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <h2>最近比赛</h2>
+      <div class="table-scroll">
+        <table id="recentTable">
+          <thead><tr><th>轮次</th><th>日期</th><th>主/客</th><th>对手</th><th>比分</th><th>赛果</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Season -->
+<div class="modal-overlay" id="seasonModal">
+  <div class="modal" style="max-width:420px">
+    <h3>创建新赛季</h3>
+    <div class="form-grid">
+      <div class="form-group"><label>赛季名称</label><input id="sName" placeholder="如 2025-2026"></div>
+      <div class="form-group"><label>联赛/赛事名称</label><input id="sLeague" placeholder="如 首都高校联赛"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="closeModal('seasonModal')">取消</button>
+      <button class="btn btn-primary" onclick="saveSeason()">创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Player -->
+<div class="modal-overlay" id="playerModal">
+  <div class="modal" style="max-width:500px">
+    <h3 id="playerModalTitle">添加球员</h3>
+    <input type="hidden" id="pEditId">
+    <div class="form-grid">
+      <div class="form-group"><label>号码</label><input type="number" id="pNumber" min="1" max="99"></div>
+      <div class="form-group"><label>姓名</label><input id="pName"></div>
+      <div class="form-group">
+        <label>位置</label>
+        <select id="pPosition">
+          <option value="GK">门将 (GK)</option>
+          <option value="DF">后卫 (DF)</option>
+          <option value="MF">中场 (MF)</option>
+          <option value="FW">前锋 (FW)</option>
+        </select>
+      </div>
+      <div class="form-group"><label>年龄</label><input type="number" id="pAge" min="14" max="50"></div>
+      <div class="form-group"><label>身高 (cm)</label><input type="number" id="pHeight" min="140" max="220"></div>
+      <div class="form-group"><label>体重 (kg)</label><input type="number" id="pWeight" min="40" max="120"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="closeModal('playerModal')">取消</button>
+      <button class="btn btn-primary" onclick="savePlayer()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Match -->
+<div class="modal-overlay" id="matchModal">
+  <div class="modal" style="max-width:560px">
+    <h3 id="matchModalTitle">添加比赛</h3>
+    <input type="hidden" id="mEditId">
+    <div class="form-grid">
+      <div class="form-group"><label>轮次</label><input type="number" id="mRound" min="1"></div>
+      <div class="form-group"><label>日期</label><input type="date" id="mDate"></div>
+      <div class="form-group">
+        <label>主/客场</label>
+        <select id="mVenue"><option value="home">主场</option><option value="away">客场</option></select>
+      </div>
+      <div class="form-group"><label>对手</label><input id="mOpponent"></div>
+      <div class="form-group"><label>我方进球</label><input type="number" id="mGoalsFor" min="0" value="0"></div>
+      <div class="form-group"><label>对手进球</label><input type="number" id="mGoalsAgainst" min="0" value="0"></div>
+      <div class="form-group"><label>半场我方进球</label><input type="number" id="mHtFor" min="0" value="0"></div>
+      <div class="form-group"><label>半场对手进球</label><input type="number" id="mHtAgainst" min="0" value="0"></div>
+      <div class="form-group"><label>天气（选填）</label><input id="mWeather" placeholder="晴/阴/雨"></div>
+      <div class="form-group"><label>裁判（选填）</label><input id="mReferee"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="closeModal('matchModal')">取消</button>
+      <button class="btn btn-primary" onclick="saveMatch()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Match Player Stats -->
+<div class="modal-overlay" id="matchStatsModal">
+  <div class="modal" style="max-width:780px">
+    <h3 id="matchStatsTitle">球员单场数据</h3>
+    <input type="hidden" id="msMatchId">
+    <p style="color:#888;font-size:13px;margin-bottom:16px">勾选参赛球员并填写数据。出场分钟数 = 下场时间 - 上场时间（自动计算）。</p>
+    <div class="table-scroll">
+      <table id="matchStatsTable">
+        <thead><tr>
+          <th style="width:30px"><input type="checkbox" id="selectAllPlayers" onchange="toggleAllPlayers(this)"></th>
+          <th>号码</th>
+          <th>姓名</th>
+          <th>首发</th>
+          <th>上场(分)</th>
+          <th>下场(分)</th>
+          <th>时间</th>
+          <th>进球</th>
+          <th>助攻</th>
+          <th>黄牌</th>
+          <th>红牌</th>
+          <th>评分</th>
+        </tr></thead>
+        <tbody id="matchStatsBody"></tbody>
+      </table>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="closeModal('matchStatsModal')">取消</button>
+      <button class="btn btn-primary" onclick="saveMatchStats()">保存数据</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'tsinghua_football_v1';
+const TEAM_NAME = '清华大学男足';
+
+function getStore() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) return JSON.parse(raw);
+  return { seasons: [], currentSeason: null };
+}
+function setStore(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+function getCurrentSeason() {
+  const store = getStore();
+  if (!store.currentSeason || !store.seasons.length) return null;
+  return store.seasons.find(s => s.id === store.currentSeason) || null;
+}
+function updateCurrentSeason(season) {
+  const store = getStore();
+  const idx = store.seasons.findIndex(s => s.id === season.id);
+  if (idx >= 0) store.seasons[idx] = season;
+  setStore(store);
+}
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+function toast(msg, ok = true) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + (ok ? 'toast-ok' : 'toast-err');
+  setTimeout(() => el.className = 'toast', 2500);
+}
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function switchTab(el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('page-' + el.dataset.page).classList.add('active');
+  const page = el.dataset.page;
+  if (page === 'players') renderPlayers();
+  else if (page === 'matches') renderMatches();
+  else if (page === 'stats') renderStats();
+  else if (page === 'overview') renderOverview();
+}
+
+// ===== Season =====
+function renderSeasonSelect() {
+  const store = getStore();
+  const sel = document.getElementById('seasonSelect');
+  sel.innerHTML = '';
+  if (!store.seasons.length) { sel.innerHTML = '<option>请创建赛季</option>'; return; }
+  store.seasons.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = `${s.name} (${s.league})`;
+    if (s.id === store.currentSeason) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+function switchSeason() {
+  const store = getStore();
+  store.currentSeason = document.getElementById('seasonSelect').value;
+  setStore(store);
+  refreshAll();
+}
+function openSeasonModal() {
+  document.getElementById('sName').value = '';
+  document.getElementById('sLeague').value = '';
+  openModal('seasonModal');
+}
+function saveSeason() {
+  const name = document.getElementById('sName').value.trim();
+  const league = document.getElementById('sLeague').value.trim();
+  if (!name) { toast('赛季名称必填', false); return; }
+  const store = getStore();
+  const season = { id: genId(), name, league, team: TEAM_NAME, players: [], matches: [] };
+  store.seasons.push(season);
+  store.currentSeason = season.id;
+  setStore(store);
+  closeModal('seasonModal');
+  renderSeasonSelect();
+  refreshAll();
+  toast('赛季创建成功');
+}
+
+// ===== Players =====
+function openPlayerModal(editId) {
+  document.getElementById('pEditId').value = editId || '';
+  const title = document.getElementById('playerModalTitle');
+  if (editId) {
+    title.textContent = '编辑球员';
+    const p = getCurrentSeason().players.find(x => x.id === editId);
+    document.getElementById('pNumber').value = p.number;
+    document.getElementById('pName').value = p.name;
+    document.getElementById('pPosition').value = p.position;
+    document.getElementById('pAge').value = p.age || '';
+    document.getElementById('pHeight').value = p.height || '';
+    document.getElementById('pWeight').value = p.weight || '';
+  } else {
+    title.textContent = '添加球员';
+    ['pNumber','pName','pAge','pHeight','pWeight'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('pPosition').value = 'MF';
+  }
+  openModal('playerModal');
+}
+function savePlayer() {
+  const season = getCurrentSeason();
+  if (!season) { toast('请先创建赛季', false); return; }
+  const editId = document.getElementById('pEditId').value;
+  const number = parseInt(document.getElementById('pNumber').value);
+  const name = document.getElementById('pName').value.trim();
+  const position = document.getElementById('pPosition').value;
+  const age = parseInt(document.getElementById('pAge').value) || null;
+  const height = parseInt(document.getElementById('pHeight').value) || null;
+  const weight = parseInt(document.getElementById('pWeight').value) || null;
+  if (!number || !name) { toast('号码和姓名必填', false); return; }
+  if (editId) {
+    const p = season.players.find(x => x.id === editId);
+    Object.assign(p, { number, name, position, age, height, weight });
+  } else {
+    season.players.push({ id: genId(), number, name, position, age, height, weight });
+  }
+  season.players.sort((a, b) => a.number - b.number);
+  updateCurrentSeason(season);
+  closeModal('playerModal');
+  renderPlayers();
+  toast(editId ? '球员已更新' : '球员已添加');
+}
+function deletePlayer(id) {
+  if (!confirm('确定删除该球员？相关比赛数据也将一并删除。')) return;
+  const season = getCurrentSeason();
+  season.players = season.players.filter(p => p.id !== id);
+  season.matches.forEach(m => { if (m.playerStats) m.playerStats = m.playerStats.filter(ps => ps.playerId !== id); });
+  updateCurrentSeason(season);
+  renderPlayers();
+  toast('球员已删除');
+}
+
+const posLabel = { GK: '门将', DF: '后卫', MF: '中场', FW: '前锋' };
+const posTag = { GK: 'gk', DF: 'df', MF: 'mf', FW: 'fw' };
+
+function renderPlayers() {
+  const season = getCurrentSeason();
+  const tbody = document.querySelector('#playerTable tbody');
+  const empty = document.getElementById('emptyPlayers');
+  tbody.innerHTML = '';
+  if (!season || !season.players.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  season.players.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="num">${p.number}</td>
+      <td><strong>${p.name}</strong></td>
+      <td><span class="tag tag-${posTag[p.position]}">${posLabel[p.position]}</span></td>
+      <td class="num">${p.age || '-'}</td>
+      <td class="num">${p.height ? p.height + 'cm' : '-'}</td>
+      <td class="num">${p.weight ? p.weight + 'kg' : '-'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline" onclick="openPlayerModal('${p.id}')">编辑</button>
+        <button class="btn btn-sm btn-danger" onclick="deletePlayer('${p.id}')">删除</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ===== Matches =====
+function openMatchModal(editId) {
+  const season = getCurrentSeason();
+  if (!season) { toast('请先创建赛季', false); return; }
+  document.getElementById('mEditId').value = editId || '';
+  const title = document.getElementById('matchModalTitle');
+  if (editId) {
+    title.textContent = '编辑比赛';
+    const m = season.matches.find(x => x.id === editId);
+    document.getElementById('mRound').value = m.round;
+    document.getElementById('mDate').value = m.date;
+    document.getElementById('mVenue').value = m.venue;
+    document.getElementById('mOpponent').value = m.opponent;
+    document.getElementById('mGoalsFor').value = m.goalsFor;
+    document.getElementById('mGoalsAgainst').value = m.goalsAgainst;
+    document.getElementById('mHtFor').value = m.htFor || 0;
+    document.getElementById('mHtAgainst').value = m.htAgainst || 0;
+    document.getElementById('mWeather').value = m.weather || '';
+    document.getElementById('mReferee').value = m.referee || '';
+  } else {
+    title.textContent = '添加比赛';
+    document.getElementById('mRound').value = season.matches.length + 1;
+    document.getElementById('mDate').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('mVenue').value = 'home';
+    ['mOpponent','mWeather','mReferee'].forEach(id => document.getElementById(id).value = '');
+    ['mGoalsFor','mGoalsAgainst','mHtFor','mHtAgainst'].forEach(id => document.getElementById(id).value = '0');
+  }
+  openModal('matchModal');
+}
+function saveMatch() {
+  const season = getCurrentSeason();
+  if (!season) return;
+  const editId = document.getElementById('mEditId').value;
+  const round = parseInt(document.getElementById('mRound').value) || 1;
+  const date = document.getElementById('mDate').value;
+  const venue = document.getElementById('mVenue').value;
+  const opponent = document.getElementById('mOpponent').value.trim();
+  const goalsFor = parseInt(document.getElementById('mGoalsFor').value) || 0;
+  const goalsAgainst = parseInt(document.getElementById('mGoalsAgainst').value) || 0;
+  const htFor = parseInt(document.getElementById('mHtFor').value) || 0;
+  const htAgainst = parseInt(document.getElementById('mHtAgainst').value) || 0;
+  const weather = document.getElementById('mWeather').value.trim();
+  const referee = document.getElementById('mReferee').value.trim();
+  if (!date || !opponent) { toast('日期和对手必填', false); return; }
+  const result = goalsFor > goalsAgainst ? 'W' : goalsFor < goalsAgainst ? 'L' : 'D';
+  if (editId) {
+    const m = season.matches.find(x => x.id === editId);
+    Object.assign(m, { round, date, venue, opponent, goalsFor, goalsAgainst, htFor, htAgainst, weather, referee, result });
+  } else {
+    season.matches.push({ id: genId(), round, date, venue, opponent, goalsFor, goalsAgainst, htFor, htAgainst, weather, referee, result, playerStats: [] });
+  }
+  season.matches.sort((a, b) => a.round - b.round);
+  updateCurrentSeason(season);
+  closeModal('matchModal');
+  renderMatches();
+  toast(editId ? '比赛已更新' : '比赛已添加');
+}
+function deleteMatch(id) {
+  if (!confirm('确定删除该比赛及所有球员数据？')) return;
+  const season = getCurrentSeason();
+  season.matches = season.matches.filter(m => m.id !== id);
+  updateCurrentSeason(season);
+  renderMatches();
+  toast('比赛已删除');
+}
+
+const resultLabels = { W: '胜', D: '平', L: '负' };
+const resultTags = { W: 'w', D: 'd', L: 'l' };
+
+function renderMatches() {
+  const season = getCurrentSeason();
+  const tbody = document.querySelector('#matchTable tbody');
+  const empty = document.getElementById('emptyMatches');
+  tbody.innerHTML = '';
+  if (!season || !season.matches.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  season.matches.forEach(m => {
+    const statsCount = (m.playerStats || []).length;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="num">${m.round}</td>
+      <td>${m.date}</td>
+      <td>${m.venue === 'home' ? '主场' : '客场'}</td>
+      <td><strong>${m.opponent}</strong></td>
+      <td class="num"><strong>${m.goalsFor} - ${m.goalsAgainst}</strong></td>
+      <td class="num">${m.htFor} - ${m.htAgainst}</td>
+      <td><span class="tag tag-${resultTags[m.result]}">${resultLabels[m.result]}</span></td>
+      <td>
+        <button class="btn btn-sm btn-success" onclick="openMatchStatsModal('${m.id}')">球员数据 ${statsCount ? '<span class=badge>' + statsCount + '</span>' : ''}</button>
+        <button class="btn btn-sm btn-outline" onclick="openMatchModal('${m.id}')">编辑</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteMatch('${m.id}')">删除</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ===== Match Player Stats =====
+function openMatchStatsModal(matchId) {
+  const season = getCurrentSeason();
+  if (!season) return;
+  const match = season.matches.find(m => m.id === matchId);
+  document.getElementById('msMatchId').value = matchId;
+  document.getElementById('matchStatsTitle').textContent = `第${match.round}轮 vs ${match.opponent} — 球员数据`;
+  const tbody = document.getElementById('matchStatsBody');
+  tbody.innerHTML = '';
+  const existing = match.playerStats || [];
+
+  season.players.forEach(p => {
+    const ps = existing.find(s => s.playerId === p.id) || {};
+    const checked = ps.playerId ? 'checked' : '';
+    const starter = ps.starter !== undefined ? ps.starter : true;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="checkbox" class="ps-check" data-pid="${p.id}" ${checked}></td>
+      <td class="num">${p.number}</td>
+      <td>${p.name}</td>
+      <td><select class="ps-starter" style="width:60px;padding:4px"><option value="1" ${starter ? 'selected' : ''}>首发</option><option value="0" ${!starter ? 'selected' : ''}>替补</option></select></td>
+      <td><input type="number" class="ps-on" value="${ps.minuteOn ?? (starter ? 0 : '')}" min="0" max="120" style="width:50px;padding:4px"></td>
+      <td><input type="number" class="ps-off" value="${ps.minuteOff ?? 90}" min="0" max="120" style="width:50px;padding:4px"></td>
+      <td class="num ps-mins">${ps.playerId ? (ps.minuteOff||90) - (ps.minuteOn||0) : '-'}</td>
+      <td><input type="number" class="ps-goals" value="${ps.goals ?? 0}" min="0" style="width:42px;padding:4px"></td>
+      <td><input type="number" class="ps-assists" value="${ps.assists ?? 0}" min="0" style="width:42px;padding:4px"></td>
+      <td><input type="number" class="ps-yellow" value="${ps.yellow ?? 0}" min="0" max="2" style="width:40px;padding:4px"></td>
+      <td><input type="number" class="ps-red" value="${ps.red ?? 0}" min="0" max="1" style="width:40px;padding:4px"></td>
+      <td><input type="number" class="ps-rating" value="${ps.rating ?? ''}" min="1" max="10" step="0.1" style="width:50px;padding:4px" placeholder="-"></td>`;
+    tbody.appendChild(tr);
+  });
+
+  // Auto-calc minutes
+  tbody.querySelectorAll('tr').forEach(tr => {
+    const onEl = tr.querySelector('.ps-on');
+    const offEl = tr.querySelector('.ps-off');
+    const minsEl = tr.querySelector('.ps-mins');
+    const calc = () => {
+      const on = parseInt(onEl.value), off = parseInt(offEl.value);
+      minsEl.textContent = (!isNaN(on) && !isNaN(off)) ? Math.max(0, off - on) : '-';
+    };
+    onEl.addEventListener('input', calc);
+    offEl.addEventListener('input', calc);
+  });
+  openModal('matchStatsModal');
+}
+
+function toggleAllPlayers(el) { document.querySelectorAll('.ps-check').forEach(cb => cb.checked = el.checked); }
+
+function saveMatchStats() {
+  const season = getCurrentSeason();
+  const matchId = document.getElementById('msMatchId').value;
+  const match = season.matches.find(m => m.id === matchId);
+  const rows = document.querySelectorAll('#matchStatsBody tr');
+  const stats = [];
+  rows.forEach(tr => {
+    if (!tr.querySelector('.ps-check').checked) return;
+    const pid = tr.querySelector('.ps-check').dataset.pid;
+    const starter = tr.querySelector('.ps-starter').value === '1';
+    const minuteOn = parseInt(tr.querySelector('.ps-on').value) || 0;
+    const minuteOff = parseInt(tr.querySelector('.ps-off').value) || 90;
+    stats.push({
+      playerId: pid, starter, minuteOn, minuteOff,
+      minutes: Math.max(0, minuteOff - minuteOn),
+      goals: parseInt(tr.querySelector('.ps-goals').value) || 0,
+      assists: parseInt(tr.querySelector('.ps-assists').value) || 0,
+      yellow: parseInt(tr.querySelector('.ps-yellow').value) || 0,
+      red: parseInt(tr.querySelector('.ps-red').value) || 0,
+      rating: parseFloat(tr.querySelector('.ps-rating').value) || null
+    });
+  });
+  match.playerStats = stats;
+  updateCurrentSeason(season);
+  closeModal('matchStatsModal');
+  renderMatches();
+  toast(`已保存 ${stats.length} 名球员数据`);
+}
+
+// ===== Player Season Stats =====
+function renderStats() {
+  const season = getCurrentSeason();
+  const tbody = document.querySelector('#statsTable tbody');
+  const empty = document.getElementById('emptyStats');
+  tbody.innerHTML = '';
+  if (!season || !season.players.length) { empty.style.display = 'block'; return; }
+
+  const agg = {};
+  season.players.forEach(p => {
+    agg[p.id] = { apps: 0, starts: 0, subs: 0, minutes: 0, goals: 0, assists: 0, yellow: 0, red: 0, ratingSum: 0, ratingCount: 0 };
+  });
+  season.matches.forEach(m => {
+    (m.playerStats || []).forEach(ps => {
+      const a = agg[ps.playerId];
+      if (!a) return;
+      a.apps++;
+      if (ps.starter) a.starts++; else a.subs++;
+      a.minutes += ps.minutes || 0;
+      a.goals += ps.goals || 0;
+      a.assists += ps.assists || 0;
+      a.yellow += ps.yellow || 0;
+      a.red += ps.red || 0;
+      if (ps.rating) { a.ratingSum += ps.rating; a.ratingCount++; }
+    });
+  });
+
+  let hasData = false;
+  season.players.forEach(p => {
+    const a = agg[p.id];
+    if (a.apps === 0) return;
+    hasData = true;
+    const avgMin = Math.round(a.minutes / a.apps);
+    const avgRating = a.ratingCount ? (a.ratingSum / a.ratingCount).toFixed(1) : '-';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="num">${p.number}</td>
+      <td><strong>${p.name}</strong></td>
+      <td><span class="tag tag-${posTag[p.position]}">${posLabel[p.position]}</span></td>
+      <td class="num">${a.apps}</td>
+      <td class="num">${a.starts}</td>
+      <td class="num">${a.subs}</td>
+      <td class="num">${a.minutes}'</td>
+      <td class="num">${avgMin}'</td>
+      <td class="num"><strong>${a.goals}</strong></td>
+      <td class="num"><strong>${a.assists}</strong></td>
+      <td class="num">${a.yellow ? '<span style="color:#f39c12;font-weight:700">' + a.yellow + '</span>' : '0'}</td>
+      <td class="num">${a.red ? '<span style="color:#c0392b;font-weight:700">' + a.red + '</span>' : '0'}</td>
+      <td class="num"><strong>${avgRating}</strong></td>`;
+    tbody.appendChild(tr);
+  });
+  empty.style.display = hasData ? 'none' : 'block';
+}
+
+// ===== Team Overview =====
+function renderOverview() {
+  const season = getCurrentSeason();
+  const cards = document.getElementById('overviewCards');
+  const venueTbody = document.querySelector('#venueTable tbody');
+  const recentTbody = document.querySelector('#recentTable tbody');
+  cards.innerHTML = ''; venueTbody.innerHTML = ''; recentTbody.innerHTML = '';
+
+  if (!season || !season.matches.length) {
+    cards.innerHTML = '<div class="empty" style="grid-column:1/-1">暂无比赛数据</div>';
+    return;
+  }
+  const ms = season.matches;
+  const total = ms.length;
+  const w = ms.filter(m => m.result === 'W').length;
+  const d = ms.filter(m => m.result === 'D').length;
+  const l = ms.filter(m => m.result === 'L').length;
+  const gf = ms.reduce((s, m) => s + m.goalsFor, 0);
+  const ga = ms.reduce((s, m) => s + m.goalsAgainst, 0);
+  const pts = w * 3 + d;
+
+  [
+    { val: total, lbl: '总场次' },
+    { val: `${w}胜 ${d}平 ${l}负`, lbl: '战绩' },
+    { val: pts, lbl: '积分' },
+    { val: `${gf} : ${ga}`, lbl: '进球 : 失球' },
+    { val: gf - ga, lbl: '净胜球' },
+    { val: total ? (w / total * 100).toFixed(0) + '%' : '0%', lbl: '胜率' }
+  ].forEach(c => {
+    cards.innerHTML += `<div class="stat-card"><div class="val">${c.val}</div><div class="lbl">${c.lbl}</div></div>`;
+  });
+
+  const buildRow = (label, list) => {
+    const cnt = list.length, ww = list.filter(m => m.result === 'W').length, dd = list.filter(m => m.result === 'D').length, ll = list.filter(m => m.result === 'L').length;
+    const gff = list.reduce((s, m) => s + m.goalsFor, 0), gaa = list.reduce((s, m) => s + m.goalsAgainst, 0);
+    return `<tr><td><strong>${label}</strong></td><td class="num">${cnt}</td><td class="num">${ww}</td><td class="num">${dd}</td><td class="num">${ll}</td><td class="num">${gff}</td><td class="num">${gaa}</td><td class="num">${gff-gaa}</td><td class="num"><strong>${ww*3+dd}</strong></td></tr>`;
+  };
+  venueTbody.innerHTML = buildRow('总计', ms) + buildRow('主场', ms.filter(m => m.venue === 'home')) + buildRow('客场', ms.filter(m => m.venue === 'away'));
+
+  ms.slice(-10).reverse().forEach(m => {
+    recentTbody.innerHTML += `<tr><td class="num">${m.round}</td><td>${m.date}</td><td>${m.venue === 'home' ? '主场' : '客场'}</td><td>${m.opponent}</td><td class="num"><strong>${m.goalsFor} - ${m.goalsAgainst}</strong></td><td><span class="tag tag-${resultTags[m.result]}">${resultLabels[m.result]}</span></td></tr>`;
+  });
+}
+
+// ===== Sorting =====
+const sortState = {};
+function sortTable(tableId, colIdx) {
+  const key = tableId + ':' + colIdx;
+  sortState[key] = sortState[key] === 'asc' ? 'desc' : 'asc';
+  const dir = sortState[key];
+  const tbody = document.querySelector('#' + tableId + ' tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  rows.sort((a, b) => {
+    let va = a.cells[colIdx].textContent.trim().replace(/[^0-9.\-]/g, '');
+    let vb = b.cells[colIdx].textContent.trim().replace(/[^0-9.\-]/g, '');
+    const na = parseFloat(va), nb = parseFloat(vb);
+    if (!isNaN(na) && !isNaN(nb)) return dir === 'asc' ? na - nb : nb - na;
+    va = a.cells[colIdx].textContent.trim();
+    vb = b.cells[colIdx].textContent.trim();
+    return dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+
+// ===== Export / Import =====
+function exportData() {
+  const store = getStore();
+  const blob = new Blob([JSON.stringify(store, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `清华男足数据备份-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('数据已导出');
+}
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.seasons) throw new Error();
+      setStore(data);
+      renderSeasonSelect();
+      refreshAll();
+      toast('数据导入成功');
+    } catch { toast('导入失败：文件格式不正确', false); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ===== Init =====
+// ===== Site Title =====
+function editTitle() {
+  const current = document.getElementById('siteTitle').textContent;
+  const name = prompt('请输入网站名称：', current);
+  if (name && name.trim()) {
+    const t = name.trim();
+    document.getElementById('siteTitle').textContent = t;
+    document.title = t;
+    localStorage.setItem('tsinghua_football_site_title', t);
+    toast('网站名称已更新');
+  }
+}
+function loadTitle() {
+  const saved = localStorage.getItem('tsinghua_football_site_title');
+  if (saved) {
+    document.getElementById('siteTitle').textContent = saved;
+    document.title = saved;
+  }
+}
+
+function refreshAll() { renderPlayers(); renderMatches(); renderStats(); renderOverview(); }
+
+(function init() {
+  const store = getStore();
+  if (!store.seasons.length) {
+    const season = { id: genId(), name: '2025-2026', league: '首都高校联赛', team: TEAM_NAME, players: [], matches: [] };
+    store.seasons.push(season);
+    store.currentSeason = season.id;
+    setStore(store);
+  }
+  renderSeasonSelect();
+  loadTitle();
+  refreshAll();
+})();
+</script>
+</body>
+</html>
