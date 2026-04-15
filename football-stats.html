@@ -223,6 +223,7 @@ td.num{text-align:center;font-variant-numeric:tabular-nums}
       <div class="form-group">
         <label>位置</label>
         <select id="pPosition">
+          <option value="">未标注</option>
           <option value="GK">门将 (GK)</option>
           <option value="DF">后卫 (DF)</option>
           <option value="MF">中场 (MF)</option>
@@ -423,7 +424,7 @@ function openPlayerModal(editId) {
   } else {
     title.textContent = '添加球员';
     ['pNumber','pName','pAge','pHeight','pWeight'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('pPosition').value = 'MF';
+    document.getElementById('pPosition').value = '';
   }
   openModal('playerModal');
 }
@@ -475,7 +476,7 @@ function renderPlayers() {
     tr.innerHTML = `
       <td class="num">${p.number}</td>
       <td><strong>${p.name}</strong></td>
-      <td><span class="tag tag-${posTag[p.position]}">${posLabel[p.position]}</span></td>
+      <td>${p.position ? '<span class="tag tag-' + posTag[p.position] + '">' + posLabel[p.position] + '</span>' : '-'}</td>
       <td class="num">${p.age || '-'}</td>
       <td class="num">${p.height ? p.height + 'cm' : '-'}</td>
       <td class="num">${p.weight ? p.weight + 'kg' : '-'}</td>
@@ -699,7 +700,7 @@ function renderStats() {
     tr.innerHTML = `
       <td class="num">${p.number}</td>
       <td><strong>${p.name}</strong></td>
-      <td><span class="tag tag-${posTag[p.position]}">${posLabel[p.position]}</span></td>
+      <td>${p.position ? '<span class="tag tag-' + posTag[p.position] + '">' + posLabel[p.position] + '</span>' : '-'}</td>
       <td class="num">${a.apps}</td>
       <td class="num">${a.starts}</td>
       <td class="num">${a.subs}</td>
@@ -832,25 +833,76 @@ function loadTitle() {
 function refreshAll() { renderPlayers(); renderMatches(); renderStats(); renderOverview(); }
 
 (function init() {
+  // 一次性迁移：清除旧数据，强制重新初始化球员名单
+  if (!localStorage.getItem('tsinghua_football_v2_migrated')) {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.setItem('tsinghua_football_v2_migrated', '1');
+  }
+
   // Load local data first for instant display
+  const defaultPlayers = [
+    { number: 1, name: '李雨桐', position: 'GK' },
+    { number: 3, name: '范嘉辉', position: '' },
+    { number: 5, name: '郑路军', position: '' },
+    { number: 7, name: '曲卓然', position: '' },
+    { number: 8, name: '康庭源', position: '' },
+    { number: 10, name: '高琪瑞', position: '' },
+    { number: 11, name: '刘思涵', position: '' },
+    { number: 13, name: '杨佳鑫', position: 'GK' },
+    { number: 14, name: '马可为', position: '' },
+    { number: 17, name: '周霆轩', position: '' },
+    { number: 18, name: '陈灼', position: '' },
+    { number: 20, name: '杨家锐', position: '' },
+    { number: 21, name: '郑博文', position: '' },
+    { number: 23, name: '蒋子桉', position: '' },
+    { number: 24, name: '白尚修', position: '' },
+    { number: 27, name: '李泰隆', position: '' },
+    { number: 36, name: '谢天浩', position: '' },
+    { number: 37, name: '彭耀霆', position: '' }
+  ];
   const store = getStore();
   if (!store.seasons.length) {
-    const season = { id: genId(), name: '2025-2026', league: '首都高校联赛', team: TEAM_NAME, players: [], matches: [] };
+    const season = { id: genId(), name: '2025-2026', league: '首都高校联赛', team: TEAM_NAME, players: defaultPlayers.map(p => ({ id: genId(), ...p, age: null, height: null, weight: null })), matches: [] };
     store.seasons.push(season);
     store.currentSeason = season.id;
     setStore(store);
+  } else {
+    // 如果当前赛季球员为空，自动填充默认名单
+    const cur = store.seasons.find(s => s.id === store.currentSeason);
+    if (cur && (!cur.players || !cur.players.length)) {
+      cur.players = defaultPlayers.map(p => ({ id: genId(), ...p, age: null, height: null, weight: null }));
+      setStore(store);
+    }
   }
   renderSeasonSelect();
   loadTitle();
   refreshAll();
 
+  function ensurePlayers(data) {
+    if (!data || !data.seasons) return data;
+    const seasons = Array.isArray(data.seasons) ? data.seasons : Object.values(data.seasons);
+    data.seasons = seasons;
+    seasons.forEach(s => {
+      if (!s.players) s.players = [];
+      if (!s.matches) s.matches = [];
+      if (!Array.isArray(s.players)) s.players = Object.values(s.players);
+      if (!Array.isArray(s.matches)) s.matches = Object.values(s.matches);
+      if (s.players.length === 0) {
+        s.players = defaultPlayers.map(p => ({ id: genId(), ...p, age: null, height: null, weight: null }));
+      }
+    });
+    return data;
+  }
+
   // Then sync from Firebase (cloud overrides local)
   dataRef.once('value').then(snap => {
     const cloudData = snap.val();
     if (cloudData && cloudData.seasons) {
+      const fixed = ensurePlayers(cloudData);
       suppressFirebaseSync = true;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(fixed));
       suppressFirebaseSync = false;
+      setStore(fixed);
       renderSeasonSelect();
       refreshAll();
     }
@@ -871,9 +923,11 @@ function refreshAll() { renderPlayers(); renderMatches(); renderStats(); renderO
     if (!firebaseReady) return;
     const cloudData = snap.val();
     if (cloudData && cloudData.seasons) {
+      const fixed = ensurePlayers(cloudData);
       suppressFirebaseSync = true;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(fixed));
       suppressFirebaseSync = false;
+      setStore(fixed);
       renderSeasonSelect();
       refreshAll();
     }
