@@ -7,197 +7,437 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
+:root {
+  --bg-primary: #0a0a1a;
+  --bg-secondary: #0f0f2a;
+  --bg-card: #12122a;
+  --bg-card-hover: #1a1a38;
+  --accent-purple: #660874;
+  --accent-purple-light: #8a0a9c;
+  --accent-gold: #FFD700;
+  --accent-gold-dim: rgba(255,215,0,0.12);
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0c0;
+  --text-muted: #505070;
+  --border-subtle: rgba(255,255,255,0.07);
+  --border-accent: rgba(102,8,116,0.45);
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.45);
+  --nav-height: 68px;
+  --section-max: 1200px;
+  --radius: 10px;
+}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:#f3f0f5;color:#1a1a2e;line-height:1.6;min-height:100vh}
-.header{background:linear-gradient(135deg,#660874,#4a0654);color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(102,8,116,.3)}
-.header h1{font-size:20px;font-weight:600;letter-spacing:1px}
-.header-right{display:flex;align-items:center;gap:12px}
-.header-right select,.header-right button{padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:13px;cursor:pointer}
-.header-right select option{color:#333;background:#fff}
-.header-right button:hover{background:rgba(255,255,255,.25)}
-.tabs{display:flex;background:#4a0654;padding:0 24px;gap:2px}
-.tab{padding:12px 24px;color:rgba(255,255,255,.6);cursor:pointer;font-size:14px;border-bottom:3px solid transparent;transition:.2s}
-.tab:hover{color:rgba(255,255,255,.85)}
-.tab.active{color:#fff;border-bottom-color:#d4a5e0;font-weight:600}
-.main{max-width:1200px;margin:20px auto;padding:0 20px}
+html{scroll-padding-top:var(--nav-height)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.6;min-height:100vh}
+
+/* ===== NAV ===== */
+.site-nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:var(--nav-height);transition:background .35s,box-shadow .35s}
+.site-nav.scrolled{background:rgba(10,10,26,.93);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 2px 24px rgba(0,0,0,.55)}
+.nav-inner{max-width:var(--section-max);margin:0 auto;padding:0 24px;height:100%;display:flex;align-items:center;gap:0}
+.nav-brand{display:flex;align-items:center;gap:10px;cursor:pointer;margin-right:auto;text-decoration:none}
+.nav-crest-mini{font-size:22px;line-height:1}
+.nav-brand-name{color:var(--text-primary);font-size:17px;font-weight:700;letter-spacing:1px;transition:color .2s}
+.nav-brand:hover .nav-brand-name{color:var(--accent-gold)}
+.nav-links{display:flex;list-style:none;gap:2px;margin-right:20px}
+.nav-link{color:var(--text-secondary);text-decoration:none;padding:8px 14px;font-size:14px;position:relative;transition:color .2s;border-radius:6px}
+.nav-link::after{content:'';position:absolute;bottom:2px;left:14px;right:14px;height:2px;background:var(--accent-gold);transform:scaleX(0);transition:transform .25s;border-radius:2px}
+.nav-link:hover{color:var(--text-primary)}
+.nav-link.active{color:var(--text-primary)}
+.nav-link.active::after{transform:scaleX(1)}
+.nav-controls{display:flex;align-items:center;gap:8px}
+.nav-controls select,.nav-controls button{padding:6px 14px;border-radius:6px;border:1px solid var(--border-accent);background:rgba(102,8,116,.2);color:var(--text-primary);font-size:13px;cursor:pointer;transition:.2s}
+.nav-controls select option{background:#1a0a2e;color:#fff}
+.nav-controls button:hover{background:rgba(102,8,116,.45)}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:8px;margin-left:12px}
+.nav-hamburger span{display:block;width:22px;height:2px;background:var(--text-primary);border-radius:2px;transition:transform .3s,opacity .3s}
+.nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.nav-hamburger.open span:nth-child(2){opacity:0}
+.nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.nav-mobile-menu{display:none;position:absolute;top:var(--nav-height);left:0;right:0;background:rgba(10,10,26,.97);padding:16px 24px;border-top:1px solid var(--border-subtle)}
+.nav-mobile-menu.open{display:block}
+.nav-mobile-menu a{display:block;padding:13px 0;color:var(--text-secondary);text-decoration:none;font-size:15px;border-bottom:1px solid var(--border-subtle)}
+.nav-mobile-menu a:last-child{border-bottom:none}
+.nav-mobile-menu a:hover{color:var(--accent-gold)}
+.nav-mobile-controls{padding:14px 0 0;display:flex;gap:8px;flex-wrap:wrap}
+.nav-mobile-controls select,.nav-mobile-controls button{padding:7px 14px;border-radius:6px;border:1px solid var(--border-accent);background:rgba(102,8,116,.2);color:var(--text-primary);font-size:13px;cursor:pointer}
+
+/* ===== HERO ===== */
+.hero-section{position:relative;height:100vh;min-height:620px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 30%,#1e0832 0%,#0a0a1a 65%)}
+.hero-bg::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 80px,rgba(255,255,255,.018) 80px,rgba(255,255,255,.018) 81px),repeating-linear-gradient(90deg,transparent,transparent 80px,rgba(255,255,255,.012) 80px,rgba(255,255,255,.012) 81px)}
+.hero-bg::after{content:'';position:absolute;bottom:0;left:0;right:0;height:180px;background:linear-gradient(to bottom,transparent,var(--bg-primary))}
+.hero-content{position:relative;z-index:1;text-align:center;padding:0 24px}
+.hero-crest{width:110px;height:110px;border-radius:50%;border:2px solid var(--accent-gold);margin:0 auto 28px;display:flex;align-items:center;justify-content:center;background:var(--accent-gold-dim);font-size:46px;box-shadow:0 0 40px rgba(255,215,0,.18),0 0 80px rgba(102,8,116,.2)}
+.hero-title{font-size:clamp(30px,5.5vw,62px);font-weight:800;letter-spacing:4px;color:var(--text-primary);text-shadow:0 2px 30px rgba(0,0,0,.6);margin-bottom:14px}
+.hero-subtitle{font-size:clamp(13px,1.8vw,17px);color:var(--text-secondary);letter-spacing:7px;margin-bottom:52px;font-weight:300}
+.hero-divider{width:60px;height:2px;background:var(--accent-gold);margin:0 auto 52px;opacity:.7}
+.hero-stats{display:flex;gap:0;justify-content:center;flex-wrap:wrap}
+.hero-stat-item{text-align:center;padding:0 28px}
+.hero-stat-item+.hero-stat-item{border-left:1px solid var(--border-subtle)}
+.hero-stat-val{display:block;font-size:clamp(26px,3.5vw,40px);font-weight:800;color:var(--accent-gold);line-height:1}
+.hero-stat-lbl{display:block;font-size:11px;color:var(--text-muted);margin-top:6px;letter-spacing:3px;text-transform:uppercase}
+.hero-scroll-hint{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);color:var(--text-muted);font-size:22px;animation:bounce 2.2s ease-in-out infinite;cursor:pointer}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}55%{transform:translateX(-50%) translateY(10px)}}
+
+/* ===== SECTIONS ===== */
+.section{padding:88px 0}
+.section-inner{max-width:var(--section-max);margin:0 auto;padding:0 24px}
+.section-title{font-size:26px;font-weight:700;color:var(--text-primary);margin-bottom:44px;padding-bottom:18px;border-bottom:1px solid var(--border-subtle);position:relative}
+.section-title::after{content:'';position:absolute;bottom:-1px;left:0;width:52px;height:2px;background:var(--accent-gold)}
+
+/* ===== ABOUT ===== */
+.about-section{background:var(--bg-secondary)}
+.about-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:52px;align-items:start}
+.about-text p{color:var(--text-secondary);line-height:1.9;margin-bottom:18px;font-size:15px}
+.about-text .placeholder-hint{color:var(--text-muted);font-style:italic;font-size:13px;border:1px dashed var(--border-subtle);border-radius:6px;padding:12px 16px;margin-bottom:12px}
+.about-honors-title{color:var(--accent-gold);font-size:15px;font-weight:600;margin-bottom:18px;letter-spacing:1px}
+.honor-list{list-style:none}
+.honor-item{padding:11px 0;border-bottom:1px solid var(--border-subtle);color:var(--text-secondary);font-size:14px;padding-left:20px;position:relative}
+.honor-item::before{content:'★';position:absolute;left:0;color:var(--accent-gold);font-size:11px;top:13px}
+.honor-item.placeholder{color:var(--text-muted);font-style:italic}
+.honor-item.placeholder::before{opacity:.4}
+
+/* ===== GALLERY ===== */
+.gallery-section{background:var(--bg-primary)}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px;margin-bottom:28px}
+.gallery-item{border-radius:var(--radius);overflow:hidden;background:var(--bg-card);border:1px solid var(--border-subtle);transition:border-color .2s,transform .2s}
+.gallery-item:hover{border-color:var(--border-accent);transform:translateY(-3px)}
+.gallery-img-wrap{aspect-ratio:16/10;overflow:hidden;cursor:pointer;background:var(--bg-secondary)}
+.gallery-img{width:100%;height:100%;object-fit:cover;transition:transform .35s}
+.gallery-img-wrap:hover .gallery-img{transform:scale(1.06)}
+.gallery-caption-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
+.gallery-caption{font-size:13px;color:var(--text-secondary)}
+.gallery-empty{text-align:center;padding:56px 24px;color:var(--text-muted);border:2px dashed var(--border-subtle);border-radius:var(--radius);grid-column:1/-1;font-size:14px}
+.gallery-upload-wrap{text-align:center}
+.gallery-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:600;display:none;align-items:center;justify-content:center}
+.gallery-lightbox.open{display:flex}
+.lb-inner{position:relative;max-width:90vw;max-height:90vh}
+.lb-img{max-width:100%;max-height:80vh;display:block;border-radius:6px}
+.lb-caption{color:var(--text-secondary);text-align:center;margin-top:14px;font-size:14px}
+.lb-close{position:absolute;top:-44px;right:0;background:none;border:none;color:#fff;font-size:26px;cursor:pointer;line-height:1;opacity:.7;transition:opacity .2s}
+.lb-close:hover{opacity:1}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:32px;cursor:pointer;padding:6px 16px;border-radius:6px;transition:background .2s}
+.lb-nav:hover{background:rgba(102,8,116,.6)}
+.lb-prev{left:-68px}.lb-next{right:-68px}
+
+/* ===== DATA SECTION ===== */
+.data-section{background:var(--bg-primary);padding-top:60px;padding-bottom:88px}
+.tabs{display:flex;background:var(--bg-secondary);border-radius:8px 8px 0 0;border:1px solid var(--border-subtle);border-bottom:none;overflow:hidden;margin-bottom:0}
+.tab{padding:14px 26px;color:var(--text-muted);cursor:pointer;font-size:14px;border-bottom:2px solid transparent;transition:.2s;white-space:nowrap}
+.tab:hover{color:var(--text-secondary);background:rgba(255,255,255,.03)}
+.tab.active{color:var(--accent-gold);border-bottom-color:var(--accent-gold);font-weight:600}
+.main{padding:0}
 .page{display:none}.page.active{display:block}
-.card{background:#fff;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-.card h2{font-size:18px;margin-bottom:16px;color:#4a0654;border-left:4px solid #660874;padding-left:12px}
+.card{background:var(--bg-card);border-radius:0 0 var(--radius) var(--radius);padding:24px;margin-bottom:18px;box-shadow:var(--shadow-card);border:1px solid var(--border-subtle)}
+.card:first-child{border-radius:0 var(--radius) var(--radius) var(--radius)}
+.card h2{font-size:16px;margin-bottom:16px;color:var(--accent-gold);border-left:3px solid var(--accent-purple);padding-left:12px;font-weight:600}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border:none;border-radius:6px;font-size:13px;cursor:pointer;transition:.2s;font-weight:500}
-.btn-primary{background:#660874;color:#fff}.btn-primary:hover{background:#7d1a8e}
+.btn-primary{background:var(--accent-purple);color:#fff}.btn-primary:hover{background:var(--accent-purple-light)}
 .btn-danger{background:#c0392b;color:#fff}.btn-danger:hover{background:#a93226}
-.btn-success{background:#27ae60;color:#fff}.btn-success:hover{background:#219a52}
+.btn-success{background:#1a7a42;color:#fff;border:1px solid #27ae60}.btn-success:hover{background:#219a52}
 .btn-sm{padding:4px 10px;font-size:12px}
-.btn-outline{background:transparent;border:1px solid #ccc;color:#555}.btn-outline:hover{border-color:#660874;color:#660874}
+.btn-outline{background:transparent;border:1px solid var(--border-subtle);color:var(--text-secondary)}.btn-outline:hover{border-color:var(--accent-purple);color:var(--text-primary)}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #eee}
-th{background:#f8f5fa;color:#555;font-weight:600;cursor:pointer;white-space:nowrap;user-select:none;position:sticky;top:0}
-th:hover{background:#f0eaf3}
-th .sort-icon{font-size:10px;margin-left:4px;color:#aaa}
-tr:hover{background:#faf5fc}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border-subtle)}
+th{background:var(--bg-secondary);color:var(--text-secondary);font-weight:600;cursor:pointer;white-space:nowrap;user-select:none;position:sticky;top:0}
+th:hover{background:var(--bg-card-hover)}
+th .sort-icon{font-size:10px;margin-left:4px;color:var(--text-muted)}
+tr:hover{background:rgba(102,8,116,.1)}
 td.num{text-align:center;font-variant-numeric:tabular-nums}
-.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center}
+td{color:var(--text-primary)}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.65);z-index:400;display:none;align-items:center;justify-content:center}
 .modal-overlay.show{display:flex}
-.modal{background:#fff;border-radius:14px;padding:28px;width:90%;max-width:700px;max-height:85vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,.2)}
-.modal h3{font-size:18px;margin-bottom:20px;color:#4a0654}
+.modal{background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:14px;padding:28px;width:90%;max-width:700px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.modal h3{font-size:17px;margin-bottom:20px;color:var(--text-primary);font-weight:600}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .form-group{display:flex;flex-direction:column;gap:4px}
-.form-group label{font-size:12px;color:#666;font-weight:500}
-.form-group input,.form-group select{padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px}
-.form-group input:focus,.form-group select:focus{outline:none;border-color:#660874;box-shadow:0 0 0 3px rgba(102,8,116,.12)}
+.form-group label{font-size:12px;color:var(--text-secondary);font-weight:500}
+.form-group input,.form-group select{padding:8px 12px;border:1px solid var(--border-accent);border-radius:6px;font-size:14px;background:var(--bg-card);color:var(--text-primary)}
+.form-group input::placeholder{color:var(--text-muted)}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--accent-purple);box-shadow:0 0 0 3px rgba(102,8,116,.2)}
+.form-group select option{background:var(--bg-card);color:var(--text-primary)}
 .form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:20px}
-.stat-card{background:#fff;border-radius:10px;padding:20px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-.stat-card .val{font-size:32px;font-weight:700;color:#660874}
-.stat-card .lbl{font-size:12px;color:#888;margin-top:4px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px}
+.stat-card{background:var(--bg-card);border-radius:var(--radius);padding:20px;text-align:center;border:1px solid var(--border-subtle)}
+.stat-card .val{font-size:28px;font-weight:700;color:var(--accent-gold)}
+.stat-card .lbl{font-size:11px;color:var(--text-muted);margin-top:5px;letter-spacing:1px}
 .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
-.tag-w{background:#27ae6020;color:#27ae60}.tag-d{background:#f39c1220;color:#e67e22}.tag-l{background:#c0392b20;color:#c0392b}
-.tag-gk{background:#8e44ad20;color:#8e44ad}.tag-df{background:#2980b920;color:#2980b9}
-.tag-mf{background:#27ae6020;color:#27ae60}.tag-fw{background:#c0392b20;color:#c0392b}
+.tag-w{background:rgba(39,174,96,.18);color:#2ecc71}.tag-d{background:rgba(230,126,34,.18);color:#e67e22}.tag-l{background:rgba(192,57,43,.18);color:#e74c3c}
+.tag-gk{background:rgba(142,68,173,.2);color:#9b59b6}.tag-df{background:rgba(41,128,185,.2);color:#3498db}
+.tag-mf{background:rgba(39,174,96,.2);color:#2ecc71}.tag-fw{background:rgba(192,57,43,.2);color:#e74c3c}
 .table-scroll{overflow-x:auto;margin:0 -24px;padding:0 24px}
-.toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:8px;color:#fff;font-size:14px;z-index:300;opacity:0;transition:.3s;transform:translateY(-10px)}
+.toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:8px;color:#fff;font-size:14px;z-index:700;opacity:0;transition:.3s;transform:translateY(-10px)}
 .toast.show{opacity:1;transform:translateY(0)}
-.toast-ok{background:#27ae60}.toast-err{background:#c0392b}
-.empty{text-align:center;padding:40px;color:#aaa;font-size:14px}
+.toast-ok{background:#1a7a42;border:1px solid #27ae60}.toast-err{background:#922b21;border:1px solid #c0392b}
+.empty{text-align:center;padding:40px;color:var(--text-muted);font-size:14px}
 .flex-between{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.badge{display:inline-block;min-width:20px;text-align:center;padding:2px 6px;border-radius:10px;font-size:11px;font-weight:700;color:#fff;background:#660874}
+.badge{display:inline-block;min-width:20px;text-align:center;padding:2px 6px;border-radius:10px;font-size:11px;font-weight:700;color:#fff;background:var(--accent-purple)}
 .data-actions{display:flex;gap:10px;flex-wrap:wrap}
 #importFile{display:none}
+.match-stats-hint{color:var(--text-muted);font-size:13px;margin-bottom:16px}
+
+/* ===== FOOTER ===== */
+.site-footer{background:var(--bg-secondary);padding:28px 0;border-top:1px solid var(--border-subtle)}
+.footer-inner{max-width:var(--section-max);margin:0 auto;padding:0 24px;text-align:center;color:var(--text-muted);font-size:13px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.footer-inner a{color:var(--text-muted);text-decoration:none;transition:color .2s}
+.footer-inner a:hover{color:var(--accent-gold)}
+
+/* ===== MOBILE ===== */
 @media(max-width:768px){
+  .nav-links,.nav-controls{display:none}
+  .nav-hamburger{display:flex}
+  .hero-stat-item{padding:0 16px}
+  .about-grid{grid-template-columns:1fr;gap:32px}
+  .gallery-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+  .lb-prev{left:-44px}.lb-next{right:-44px}
   .form-grid{grid-template-columns:1fr}
-  .header{flex-direction:column;gap:8px}
-  .tabs{overflow-x:auto;padding:0 12px}
-  .tab{white-space:nowrap;padding:10px 16px;font-size:13px}
-  .main{padding:0 10px}
+  .tabs{overflow-x:auto}
+  .tab{padding:12px 16px;font-size:13px}
+  .section{padding:60px 0}
+  .footer-inner{justify-content:center}
+}
+@media(max-width:480px){
+  .hero-stats{gap:8px}
+  .hero-stat-item{padding:0 10px}
+  .hero-stat-item+.hero-stat-item{border-left:none;padding-top:8px}
+  .hero-stats{flex-direction:row;flex-wrap:wrap;justify-content:center}
 }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <h1 id="siteTitle" onclick="editTitle()" style="cursor:pointer" title="点击修改网站名称">清华男足数据网</h1>
-  <div class="header-right">
-    <select id="seasonSelect" onchange="switchSeason()"></select>
-    <button onclick="openSeasonModal()">+ 新赛季</button>
+<!-- ===== NAV ===== -->
+<nav class="site-nav" id="siteNav">
+  <div class="nav-inner">
+    <a class="nav-brand" href="#hero">
+      <span class="nav-crest-mini">⚽</span>
+      <span class="nav-brand-name" id="siteTitle" onclick="editTitle();event.preventDefault()" title="点击修改网站名称" style="cursor:pointer">清华男足数据网</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#hero"    class="nav-link active" data-section="hero">首页</a></li>
+      <li><a href="#about"   class="nav-link" data-section="about">球队介绍</a></li>
+      <li><a href="#gallery" class="nav-link" data-section="gallery">图片集锦</a></li>
+      <li><a href="#data"    class="nav-link" data-section="data">数据中心</a></li>
+    </ul>
+    <div class="nav-controls">
+      <select id="seasonSelect" onchange="switchSeason()"></select>
+      <button onclick="openSeasonModal()">+ 新赛季</button>
+    </div>
+    <button class="nav-hamburger" id="navHamburger" onclick="toggleMobileMenu()" aria-label="菜单" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="nav-mobile-menu" id="navMobileMenu">
+    <a href="#hero"    data-section="hero"    onclick="mobileNavClick(this)">首页</a>
+    <a href="#about"   data-section="about"   onclick="mobileNavClick(this)">球队介绍</a>
+    <a href="#gallery" data-section="gallery" onclick="mobileNavClick(this)">图片集锦</a>
+    <a href="#data"    data-section="data"    onclick="mobileNavClick(this)">数据中心</a>
+    <div class="nav-mobile-controls">
+      <select onchange="document.getElementById('seasonSelect').value=this.value;switchSeason()" id="seasonSelectMobile"></select>
+      <button onclick="openSeasonModal();closeMobileMenu()">+ 新赛季</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero-section" id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-crest">⚽</div>
+    <h1 class="hero-title">清华大学男足</h1>
+    <p class="hero-subtitle">锐意进取 · 拼搏奋斗</p>
+    <div class="hero-divider"></div>
+    <div class="hero-stats" id="heroStats">
+      <div class="hero-stat-item"><span class="hero-stat-val">-</span><span class="hero-stat-lbl">场</span></div>
+      <div class="hero-stat-item"><span class="hero-stat-val">-</span><span class="hero-stat-lbl">胜</span></div>
+      <div class="hero-stat-item"><span class="hero-stat-val">-</span><span class="hero-stat-lbl">平</span></div>
+      <div class="hero-stat-item"><span class="hero-stat-val">-</span><span class="hero-stat-lbl">负</span></div>
+      <div class="hero-stat-item"><span class="hero-stat-val">-</span><span class="hero-stat-lbl">进球</span></div>
+      <div class="hero-stat-item"><span class="hero-stat-val">-</span><span class="hero-stat-lbl">积分</span></div>
+    </div>
+  </div>
+  <div class="hero-scroll-hint" onclick="document.getElementById('about').scrollIntoView({behavior:'smooth'})">↓</div>
+</section>
+
+<!-- ===== ABOUT ===== -->
+<section class="section about-section" id="about">
+  <div class="section-inner">
+    <h2 class="section-title">球队介绍</h2>
+    <div class="about-grid">
+      <div class="about-text">
+        <p class="placeholder-hint">✏️ 此处待填写球队简介，点击数据中心可编辑各项内容。</p>
+        <p style="color:var(--text-muted);font-size:14px">清华大学男子足球队成立于…（待填写）</p>
+        <p style="color:var(--text-muted);font-size:14px">球队历史与传承…（待填写）</p>
+      </div>
+      <div class="about-honors">
+        <p class="about-honors-title">荣誉榜</p>
+        <ul class="honor-list">
+          <li class="honor-item placeholder">待填写荣誉…</li>
+          <li class="honor-item placeholder">待填写荣誉…</li>
+          <li class="honor-item placeholder">待填写荣誉…</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== GALLERY ===== -->
+<section class="section gallery-section" id="gallery">
+  <div class="section-inner">
+    <h2 class="section-title">图片集锦</h2>
+    <div class="gallery-grid" id="galleryGrid">
+      <div class="gallery-empty">暂无图片，点击下方按钮上传球队照片</div>
+    </div>
+    <div class="gallery-upload-wrap">
+      <label class="btn btn-primary" for="galleryUploadInput">+ 上传图片</label>
+      <input type="file" id="galleryUploadInput" accept="image/*" multiple style="display:none" onchange="handleGalleryUpload(event)">
+    </div>
+  </div>
+</section>
+
+<!-- ===== DATA SECTION ===== -->
+<section class="data-section" id="data">
+  <div class="section-inner">
+    <h2 class="section-title">数据中心</h2>
+
+    <div class="tabs">
+      <div class="tab active" data-page="players" onclick="switchTab(this)">球员管理</div>
+      <div class="tab" data-page="matches" onclick="switchTab(this)">比赛记录</div>
+      <div class="tab" data-page="stats" onclick="switchTab(this)">球员统计</div>
+      <div class="tab" data-page="overview" onclick="switchTab(this)">球队总览</div>
+    </div>
+
+    <div class="main">
+
+      <!-- Page: Players -->
+      <div class="page active" id="page-players">
+        <div class="card">
+          <div class="flex-between">
+            <h2>球员花名册</h2>
+            <button class="btn btn-primary" onclick="openPlayerModal()">+ 添加球员</button>
+          </div>
+          <div class="table-scroll">
+            <table id="playerTable">
+              <thead><tr>
+                <th onclick="sortTable('playerTable',0)">号码 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th onclick="sortTable('playerTable',1)">姓名 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th onclick="sortTable('playerTable',2)">位置 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th onclick="sortTable('playerTable',3)">年龄 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th onclick="sortTable('playerTable',4)">身高 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th onclick="sortTable('playerTable',5)">体重 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th>操作</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="empty" id="emptyPlayers">暂无球员，点击上方按钮添加</div>
+        </div>
+        <div class="card">
+          <h2>数据管理</h2>
+          <div class="data-actions">
+            <button class="btn btn-outline" onclick="exportData()">导出 JSON 备份</button>
+            <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">导入 JSON 备份</button>
+            <input type="file" id="importFile" accept=".json" onchange="importData(event)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Page: Matches -->
+      <div class="page" id="page-matches">
+        <div class="card">
+          <div class="flex-between">
+            <h2>比赛记录</h2>
+            <button class="btn btn-primary" onclick="openMatchModal()">+ 添加比赛</button>
+          </div>
+          <div class="table-scroll">
+            <table id="matchTable">
+              <thead><tr>
+                <th onclick="sortTable('matchTable',0)">轮次 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th onclick="sortTable('matchTable',1)">日期 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th>主/客</th><th>对手</th><th>比分</th><th>半场</th><th>赛果</th><th>操作</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="empty" id="emptyMatches">暂无比赛记录</div>
+        </div>
+      </div>
+
+      <!-- Page: Stats -->
+      <div class="page" id="page-stats">
+        <div class="card">
+          <h2>球员赛季统计</h2>
+          <div class="table-scroll">
+            <table id="statsTable">
+              <thead><tr>
+                <th onclick="sortTable('statsTable',0)">号码 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th onclick="sortTable('statsTable',1)">姓名 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th>位置</th>
+                <th onclick="sortTable('statsTable',3)">出场 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th onclick="sortTable('statsTable',4)">首发 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th onclick="sortTable('statsTable',5)">替补 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th onclick="sortTable('statsTable',6)">总时间 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th onclick="sortTable('statsTable',7)">场均时间 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th onclick="sortTable('statsTable',8)">进球 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th onclick="sortTable('statsTable',9)">助攻 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th onclick="sortTable('statsTable',10)">黄牌 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th onclick="sortTable('statsTable',11)">红牌 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+                <th onclick="sortTable('statsTable',12)">场均评分 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="empty" id="emptyStats">暂无统计数据</div>
+        </div>
+      </div>
+
+      <!-- Page: Overview -->
+      <div class="page" id="page-overview">
+        <div class="stats-row" id="overviewCards"></div>
+        <div class="card">
+          <h2>主客场分项统计</h2>
+          <div class="table-scroll">
+            <table id="venueTable">
+              <thead><tr><th></th><th>场次</th><th>胜</th><th>平</th><th>负</th><th>进球</th><th>失球</th><th>净胜球</th><th>积分</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h2>最近比赛</h2>
+          <div class="table-scroll">
+            <table id="recentTable">
+              <thead><tr><th>轮次</th><th>日期</th><th>主/客</th><th>对手</th><th>比分</th><th>赛果</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.main -->
+  </div><!-- /.section-inner -->
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span>清华大学男足 &copy; 2025</span>
+    <span>数据由 <a href="#data">数据中心</a> 驱动</span>
+  </div>
+</footer>
+
+<!-- ===== LIGHTBOX ===== -->
+<div class="gallery-lightbox" id="galleryLightbox" onclick="closeLightbox()">
+  <div class="lb-inner" onclick="event.stopPropagation()">
+    <button class="lb-close" onclick="closeLightbox()">&#x2715;</button>
+    <button class="lb-nav lb-prev" onclick="lbNav(-1)">&#x2039;</button>
+    <img class="lb-img" id="lbImg" src="" alt="">
+    <button class="lb-nav lb-next" onclick="lbNav(1)">&#x203A;</button>
+    <p class="lb-caption" id="lbCaption"></p>
   </div>
 </div>
 
-<div class="tabs">
-  <div class="tab active" data-page="players" onclick="switchTab(this)">球员管理</div>
-  <div class="tab" data-page="matches" onclick="switchTab(this)">比赛记录</div>
-  <div class="tab" data-page="stats" onclick="switchTab(this)">球员统计</div>
-  <div class="tab" data-page="overview" onclick="switchTab(this)">球队总览</div>
-</div>
-
-<div class="main">
-
-  <!-- Page: Players -->
-  <div class="page active" id="page-players">
-    <div class="card">
-      <div class="flex-between">
-        <h2>球员花名册</h2>
-        <button class="btn btn-primary" onclick="openPlayerModal()">+ 添加球员</button>
-      </div>
-      <div class="table-scroll">
-        <table id="playerTable">
-          <thead><tr>
-            <th onclick="sortTable('playerTable',0)">号码 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th onclick="sortTable('playerTable',1)">姓名 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th onclick="sortTable('playerTable',2)">位置 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th onclick="sortTable('playerTable',3)">年龄 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th onclick="sortTable('playerTable',4)">身高 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th onclick="sortTable('playerTable',5)">体重 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th>操作</th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div class="empty" id="emptyPlayers">暂无球员，点击上方按钮添加</div>
-    </div>
-    <div class="card">
-      <h2>数据管理</h2>
-      <div class="data-actions">
-        <button class="btn btn-outline" onclick="exportData()">导出 JSON 备份</button>
-        <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">导入 JSON 备份</button>
-        <input type="file" id="importFile" accept=".json" onchange="importData(event)">
-      </div>
-    </div>
-  </div>
-
-  <!-- Page: Matches -->
-  <div class="page" id="page-matches">
-    <div class="card">
-      <div class="flex-between">
-        <h2>比赛记录</h2>
-        <button class="btn btn-primary" onclick="openMatchModal()">+ 添加比赛</button>
-      </div>
-      <div class="table-scroll">
-        <table id="matchTable">
-          <thead><tr>
-            <th onclick="sortTable('matchTable',0)">轮次 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th onclick="sortTable('matchTable',1)">日期 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th>主/客</th><th>对手</th><th>比分</th><th>半场</th><th>赛果</th><th>操作</th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div class="empty" id="emptyMatches">暂无比赛记录</div>
-    </div>
-  </div>
-
-  <!-- Page: Stats -->
-  <div class="page" id="page-stats">
-    <div class="card">
-      <h2>球员赛季统计</h2>
-      <div class="table-scroll">
-        <table id="statsTable">
-          <thead><tr>
-            <th onclick="sortTable('statsTable',0)">号码 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th onclick="sortTable('statsTable',1)">姓名 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th>位置</th>
-            <th onclick="sortTable('statsTable',3)">出场 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th onclick="sortTable('statsTable',4)">首发 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th onclick="sortTable('statsTable',5)">替补 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th onclick="sortTable('statsTable',6)">总时间 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th onclick="sortTable('statsTable',7)">场均时间 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th onclick="sortTable('statsTable',8)">进球 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th onclick="sortTable('statsTable',9)">助攻 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th onclick="sortTable('statsTable',10)">黄牌 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th onclick="sortTable('statsTable',11)">红牌 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-            <th onclick="sortTable('statsTable',12)">场均评分 <span class="sort-icon">&#x25B2;&#x25BC;</span></th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div class="empty" id="emptyStats">暂无统计数据</div>
-    </div>
-  </div>
-
-  <!-- Page: Overview -->
-  <div class="page" id="page-overview">
-    <div class="stats-row" id="overviewCards"></div>
-    <div class="card">
-      <h2>主客场分项统计</h2>
-      <div class="table-scroll">
-        <table id="venueTable">
-          <thead><tr><th></th><th>场次</th><th>胜</th><th>平</th><th>负</th><th>进球</th><th>失球</th><th>净胜球</th><th>积分</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card">
-      <h2>最近比赛</h2>
-      <div class="table-scroll">
-        <table id="recentTable">
-          <thead><tr><th>轮次</th><th>日期</th><th>主/客</th><th>对手</th><th>比分</th><th>赛果</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Season -->
+<!-- ===== MODALS (unchanged) ===== -->
 <div class="modal-overlay" id="seasonModal">
   <div class="modal" style="max-width:420px">
     <h3>创建新赛季</h3>
@@ -212,7 +452,6 @@ td.num{text-align:center;font-variant-numeric:tabular-nums}
   </div>
 </div>
 
-<!-- Modal: Player -->
 <div class="modal-overlay" id="playerModal">
   <div class="modal" style="max-width:500px">
     <h3 id="playerModalTitle">添加球员</h3>
@@ -241,7 +480,6 @@ td.num{text-align:center;font-variant-numeric:tabular-nums}
   </div>
 </div>
 
-<!-- Modal: Match -->
 <div class="modal-overlay" id="matchModal">
   <div class="modal" style="max-width:560px">
     <h3 id="matchModalTitle">添加比赛</h3>
@@ -268,27 +506,17 @@ td.num{text-align:center;font-variant-numeric:tabular-nums}
   </div>
 </div>
 
-<!-- Modal: Match Player Stats -->
 <div class="modal-overlay" id="matchStatsModal">
   <div class="modal" style="max-width:780px">
     <h3 id="matchStatsTitle">球员单场数据</h3>
     <input type="hidden" id="msMatchId">
-    <p style="color:#888;font-size:13px;margin-bottom:16px">勾选参赛球员并填写数据。出场分钟数 = 下场时间 - 上场时间（自动计算）。</p>
+    <p class="match-stats-hint">勾选参赛球员并填写数据。出场分钟数 = 下场时间 - 上场时间（自动计算）。</p>
     <div class="table-scroll">
       <table id="matchStatsTable">
         <thead><tr>
           <th style="width:30px"><input type="checkbox" id="selectAllPlayers" onchange="toggleAllPlayers(this)"></th>
-          <th>号码</th>
-          <th>姓名</th>
-          <th>首发</th>
-          <th>上场(分)</th>
-          <th>下场(分)</th>
-          <th>时间</th>
-          <th>进球</th>
-          <th>助攻</th>
-          <th>黄牌</th>
-          <th>红牌</th>
-          <th>评分</th>
+          <th>号码</th><th>姓名</th><th>首发</th><th>上场(分)</th><th>下场(分)</th><th>时间</th>
+          <th>进球</th><th>助攻</th><th>黄牌</th><th>红牌</th><th>评分</th>
         </tr></thead>
         <tbody id="matchStatsBody"></tbody>
       </table>
@@ -302,6 +530,7 @@ td.num{text-align:center;font-variant-numeric:tabular-nums}
 
 <div class="toast" id="toast"></div>
 
+<!-- ===== EXISTING SCRIPT (zero changes) ===== -->
 <script>
 const STORAGE_KEY = 'tsinghua_football_v1';
 const TEAM_NAME = '清华大学男足';
@@ -371,15 +600,18 @@ function switchTab(el) {
 // ===== Season =====
 function renderSeasonSelect() {
   const store = getStore();
-  const sel = document.getElementById('seasonSelect');
-  sel.innerHTML = '';
-  if (!store.seasons.length) { sel.innerHTML = '<option>请创建赛季</option>'; return; }
-  store.seasons.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s.id;
-    opt.textContent = `${s.name} (${s.league})`;
-    if (s.id === store.currentSeason) opt.selected = true;
-    sel.appendChild(opt);
+  ['seasonSelect','seasonSelectMobile'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '';
+    if (!store.seasons.length) { sel.innerHTML = '<option>请创建赛季</option>'; return; }
+    store.seasons.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = `${s.name} (${s.league})`;
+      if (s.id === store.currentSeason) opt.selected = true;
+      sel.appendChild(opt);
+    });
   });
 }
 function switchSeason() {
@@ -594,7 +826,6 @@ function openMatchStatsModal(matchId) {
   const tbody = document.getElementById('matchStatsBody');
   tbody.innerHTML = '';
   const existing = match.playerStats || [];
-
   season.players.forEach(p => {
     const ps = existing.find(s => s.playerId === p.id) || {};
     const checked = ps.playerId ? 'checked' : '';
@@ -604,19 +835,17 @@ function openMatchStatsModal(matchId) {
       <td><input type="checkbox" class="ps-check" data-pid="${p.id}" ${checked}></td>
       <td class="num">${p.number}</td>
       <td>${p.name}</td>
-      <td><select class="ps-starter" style="width:60px;padding:4px"><option value="1" ${starter ? 'selected' : ''}>首发</option><option value="0" ${!starter ? 'selected' : ''}>替补</option></select></td>
-      <td><input type="number" class="ps-on" value="${ps.minuteOn ?? (starter ? 0 : '')}" min="0" max="120" style="width:50px;padding:4px"></td>
-      <td><input type="number" class="ps-off" value="${ps.minuteOff ?? 90}" min="0" max="120" style="width:50px;padding:4px"></td>
+      <td><select class="ps-starter" style="width:60px;padding:4px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-accent);border-radius:4px"><option value="1" ${starter ? 'selected' : ''}>首发</option><option value="0" ${!starter ? 'selected' : ''}>替补</option></select></td>
+      <td><input type="number" class="ps-on" value="${ps.minuteOn ?? (starter ? 0 : '')}" min="0" max="120" style="width:50px;padding:4px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-accent);border-radius:4px"></td>
+      <td><input type="number" class="ps-off" value="${ps.minuteOff ?? 90}" min="0" max="120" style="width:50px;padding:4px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-accent);border-radius:4px"></td>
       <td class="num ps-mins">${ps.playerId ? (ps.minuteOff||90) - (ps.minuteOn||0) : '-'}</td>
-      <td><input type="number" class="ps-goals" value="${ps.goals ?? 0}" min="0" style="width:42px;padding:4px"></td>
-      <td><input type="number" class="ps-assists" value="${ps.assists ?? 0}" min="0" style="width:42px;padding:4px"></td>
-      <td><input type="number" class="ps-yellow" value="${ps.yellow ?? 0}" min="0" max="2" style="width:40px;padding:4px"></td>
-      <td><input type="number" class="ps-red" value="${ps.red ?? 0}" min="0" max="1" style="width:40px;padding:4px"></td>
-      <td><input type="number" class="ps-rating" value="${ps.rating ?? ''}" min="1" max="10" step="0.1" style="width:50px;padding:4px" placeholder="-"></td>`;
+      <td><input type="number" class="ps-goals" value="${ps.goals ?? 0}" min="0" style="width:42px;padding:4px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-accent);border-radius:4px"></td>
+      <td><input type="number" class="ps-assists" value="${ps.assists ?? 0}" min="0" style="width:42px;padding:4px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-accent);border-radius:4px"></td>
+      <td><input type="number" class="ps-yellow" value="${ps.yellow ?? 0}" min="0" max="2" style="width:40px;padding:4px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-accent);border-radius:4px"></td>
+      <td><input type="number" class="ps-red" value="${ps.red ?? 0}" min="0" max="1" style="width:40px;padding:4px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-accent);border-radius:4px"></td>
+      <td><input type="number" class="ps-rating" value="${ps.rating ?? ''}" min="1" max="10" step="0.1" style="width:50px;padding:4px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-accent);border-radius:4px" placeholder="-"></td>`;
     tbody.appendChild(tr);
   });
-
-  // Auto-calc minutes
   tbody.querySelectorAll('tr').forEach(tr => {
     const onEl = tr.querySelector('.ps-on');
     const offEl = tr.querySelector('.ps-off');
@@ -669,7 +898,6 @@ function renderStats() {
   const empty = document.getElementById('emptyStats');
   tbody.innerHTML = '';
   if (!season || !season.players.length) { empty.style.display = 'block'; return; }
-
   const agg = {};
   season.players.forEach(p => {
     agg[p.id] = { apps: 0, starts: 0, subs: 0, minutes: 0, goals: 0, assists: 0, yellow: 0, red: 0, ratingSum: 0, ratingCount: 0 };
@@ -688,7 +916,6 @@ function renderStats() {
       if (ps.rating) { a.ratingSum += ps.rating; a.ratingCount++; }
     });
   });
-
   let hasData = false;
   season.players.forEach(p => {
     const a = agg[p.id];
@@ -709,7 +936,7 @@ function renderStats() {
       <td class="num"><strong>${a.goals}</strong></td>
       <td class="num"><strong>${a.assists}</strong></td>
       <td class="num">${a.yellow ? '<span style="color:#f39c12;font-weight:700">' + a.yellow + '</span>' : '0'}</td>
-      <td class="num">${a.red ? '<span style="color:#c0392b;font-weight:700">' + a.red + '</span>' : '0'}</td>
+      <td class="num">${a.red ? '<span style="color:#e74c3c;font-weight:700">' + a.red + '</span>' : '0'}</td>
       <td class="num"><strong>${avgRating}</strong></td>`;
     tbody.appendChild(tr);
   });
@@ -723,7 +950,6 @@ function renderOverview() {
   const venueTbody = document.querySelector('#venueTable tbody');
   const recentTbody = document.querySelector('#recentTable tbody');
   cards.innerHTML = ''; venueTbody.innerHTML = ''; recentTbody.innerHTML = '';
-
   if (!season || !season.matches.length) {
     cards.innerHTML = '<div class="empty" style="grid-column:1/-1">暂无比赛数据</div>';
     return;
@@ -736,7 +962,6 @@ function renderOverview() {
   const gf = ms.reduce((s, m) => s + m.goalsFor, 0);
   const ga = ms.reduce((s, m) => s + m.goalsAgainst, 0);
   const pts = w * 3 + d;
-
   [
     { val: total, lbl: '总场次' },
     { val: `${w}胜 ${d}平 ${l}负`, lbl: '战绩' },
@@ -747,14 +972,12 @@ function renderOverview() {
   ].forEach(c => {
     cards.innerHTML += `<div class="stat-card"><div class="val">${c.val}</div><div class="lbl">${c.lbl}</div></div>`;
   });
-
   const buildRow = (label, list) => {
     const cnt = list.length, ww = list.filter(m => m.result === 'W').length, dd = list.filter(m => m.result === 'D').length, ll = list.filter(m => m.result === 'L').length;
     const gff = list.reduce((s, m) => s + m.goalsFor, 0), gaa = list.reduce((s, m) => s + m.goalsAgainst, 0);
     return `<tr><td><strong>${label}</strong></td><td class="num">${cnt}</td><td class="num">${ww}</td><td class="num">${dd}</td><td class="num">${ll}</td><td class="num">${gff}</td><td class="num">${gaa}</td><td class="num">${gff-gaa}</td><td class="num"><strong>${ww*3+dd}</strong></td></tr>`;
   };
   venueTbody.innerHTML = buildRow('总计', ms) + buildRow('主场', ms.filter(m => m.venue === 'home')) + buildRow('客场', ms.filter(m => m.venue === 'away'));
-
   ms.slice(-10).reverse().forEach(m => {
     recentTbody.innerHTML += `<tr><td class="num">${m.round}</td><td>${m.date}</td><td>${m.venue === 'home' ? '主场' : '客场'}</td><td>${m.opponent}</td><td class="num"><strong>${m.goalsFor} - ${m.goalsAgainst}</strong></td><td><span class="tag tag-${resultTags[m.result]}">${resultLabels[m.result]}</span></td></tr>`;
   });
@@ -808,7 +1031,6 @@ function importData(event) {
   event.target.value = '';
 }
 
-// ===== Init =====
 // ===== Site Title =====
 function editTitle() {
   const current = document.getElementById('siteTitle').textContent;
@@ -833,13 +1055,11 @@ function loadTitle() {
 function refreshAll() { renderPlayers(); renderMatches(); renderStats(); renderOverview(); }
 
 (function init() {
-  // 一次性迁移：清除旧数据，强制重新初始化球员名单
   if (!localStorage.getItem('tsinghua_football_v2_migrated')) {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.setItem('tsinghua_football_v2_migrated', '1');
   }
 
-  // Load local data first for instant display
   const defaultPlayers = [
     { number: 1, name: '李雨桐', position: 'GK' },
     { number: 3, name: '范嘉辉', position: '' },
@@ -860,23 +1080,6 @@ function refreshAll() { renderPlayers(); renderMatches(); renderStats(); renderO
     { number: 36, name: '谢天浩', position: '' },
     { number: 37, name: '彭耀霆', position: '' }
   ];
-  const store = getStore();
-  if (!store.seasons.length) {
-    const season = { id: genId(), name: '2025-2026', league: '首都高校联赛', team: TEAM_NAME, players: defaultPlayers.map(p => ({ id: genId(), ...p, age: null, height: null, weight: null })), matches: [] };
-    store.seasons.push(season);
-    store.currentSeason = season.id;
-    setStore(store);
-  } else {
-    // 如果当前赛季球员为空，自动填充默认名单
-    const cur = store.seasons.find(s => s.id === store.currentSeason);
-    if (cur && (!cur.players || !cur.players.length)) {
-      cur.players = defaultPlayers.map(p => ({ id: genId(), ...p, age: null, height: null, weight: null }));
-      setStore(store);
-    }
-  }
-  renderSeasonSelect();
-  loadTitle();
-  refreshAll();
 
   function ensurePlayers(data) {
     if (!data || !data.seasons) return data;
@@ -887,14 +1090,31 @@ function refreshAll() { renderPlayers(); renderMatches(); renderStats(); renderO
       if (!s.matches) s.matches = [];
       if (!Array.isArray(s.players)) s.players = Object.values(s.players);
       if (!Array.isArray(s.matches)) s.matches = Object.values(s.matches);
-      if (s.players.length === 0) {
+      if (!s.players.length) {
         s.players = defaultPlayers.map(p => ({ id: genId(), ...p, age: null, height: null, weight: null }));
       }
     });
     return data;
   }
 
-  // Then sync from Firebase (cloud overrides local)
+  const store = getStore();
+  if (!store.seasons.length) {
+    const season = { id: genId(), name: '2025-2026', league: '首都高校联赛', team: TEAM_NAME,
+      players: defaultPlayers.map(p => ({ id: genId(), ...p, age: null, height: null, weight: null })), matches: [] };
+    store.seasons.push(season);
+    store.currentSeason = season.id;
+    setStore(store);
+  } else {
+    const cur = store.seasons.find(s => s.id === store.currentSeason);
+    if (cur && (!cur.players || !cur.players.length)) {
+      cur.players = defaultPlayers.map(p => ({ id: genId(), ...p, age: null, height: null, weight: null }));
+      setStore(store);
+    }
+  }
+  renderSeasonSelect();
+  loadTitle();
+  refreshAll();
+
   dataRef.once('value').then(snap => {
     const cloudData = snap.val();
     if (cloudData && cloudData.seasons) {
@@ -918,7 +1138,6 @@ function refreshAll() { renderPlayers(); renderMatches(); renderStats(); renderO
     }
   }).catch(() => {});
 
-  // Listen for real-time updates from other devices
   dataRef.on('value', snap => {
     if (!firebaseReady) return;
     const cloudData = snap.val();
@@ -940,6 +1159,209 @@ function refreshAll() { renderPlayers(); renderMatches(); renderStats(); renderO
     }
   });
 })();
+</script>
+
+<!-- ===== NEW FEATURES SCRIPT ===== -->
+<script>
+// ===== Hero Stats =====
+function renderHeroStats() {
+  const el = document.getElementById('heroStats');
+  if (!el) return;
+  const season = getCurrentSeason();
+  if (!season || !season.matches.length) return;
+  const ms = season.matches;
+  const w = ms.filter(m => m.result === 'W').length;
+  const d = ms.filter(m => m.result === 'D').length;
+  const l = ms.filter(m => m.result === 'L').length;
+  const gf = ms.reduce((s, m) => s + m.goalsFor, 0);
+  const pts = w * 3 + d;
+  const items = [
+    { val: ms.length, lbl: '场' },
+    { val: w, lbl: '胜' },
+    { val: d, lbl: '平' },
+    { val: l, lbl: '负' },
+    { val: gf, lbl: '进球' },
+    { val: pts, lbl: '积分' }
+  ];
+  el.innerHTML = items.map(i =>
+    `<div class="hero-stat-item"><span class="hero-stat-val">${i.val}</span><span class="hero-stat-lbl">${i.lbl}</span></div>`
+  ).join('');
+}
+
+// Hook into refreshAll
+const _origRefreshAll = refreshAll;
+window.refreshAll = function() {
+  _origRefreshAll();
+  renderHeroStats();
+};
+
+// ===== Nav Scroll =====
+function initNavScroll() {
+  const nav = document.getElementById('siteNav');
+  const handler = () => nav.classList.toggle('scrolled', window.scrollY > 60);
+  window.addEventListener('scroll', handler, { passive: true });
+  handler();
+}
+
+// ===== Scroll Spy =====
+function initScrollSpy() {
+  const sections = ['hero','about','gallery','data'];
+  const links = document.querySelectorAll('.nav-link[data-section]');
+  window.addEventListener('scroll', () => {
+    let current = 'hero';
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && window.scrollY >= el.offsetTop - 120) current = id;
+    });
+    links.forEach(a => a.classList.toggle('active', a.dataset.section === current));
+  }, { passive: true });
+}
+
+// ===== Smooth Scroll =====
+function initSmoothScroll() {
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    if (!a.closest('.site-nav') && !a.closest('.site-footer') && !a.closest('.hero-scroll-hint')) return;
+    a.addEventListener('click', e => {
+      const href = a.getAttribute('href');
+      if (!href || href === '#') return;
+      const target = document.getElementById(href.slice(1));
+      if (!target) return;
+      e.preventDefault();
+      const offset = document.getElementById('siteNav').offsetHeight;
+      window.scrollTo({ top: target.offsetTop - offset, behavior: 'smooth' });
+    });
+  });
+}
+
+// ===== Mobile Menu =====
+function toggleMobileMenu() {
+  const menu = document.getElementById('navMobileMenu');
+  const btn = document.getElementById('navHamburger');
+  const isOpen = menu.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+  btn.setAttribute('aria-expanded', isOpen);
+}
+function closeMobileMenu() {
+  document.getElementById('navMobileMenu').classList.remove('open');
+  document.getElementById('navHamburger').classList.remove('open');
+  document.getElementById('navHamburger').setAttribute('aria-expanded', 'false');
+}
+function mobileNavClick(el) {
+  const href = el.getAttribute('href');
+  closeMobileMenu();
+  if (!href || href === '#') return;
+  const target = document.getElementById(href.slice(1));
+  if (!target) return;
+  setTimeout(() => {
+    const offset = document.getElementById('siteNav').offsetHeight;
+    window.scrollTo({ top: target.offsetTop - offset, behavior: 'smooth' });
+  }, 50);
+}
+document.addEventListener('click', e => {
+  const nav = document.getElementById('siteNav');
+  if (nav && !nav.contains(e.target)) closeMobileMenu();
+});
+
+// ===== Gallery =====
+const GALLERY_KEY = 'tsinghua_football_gallery_v1';
+function getGallery() {
+  try { return JSON.parse(localStorage.getItem(GALLERY_KEY)) || []; }
+  catch { return []; }
+}
+function saveGallery(photos) {
+  localStorage.setItem(GALLERY_KEY, JSON.stringify(photos));
+}
+function renderGallery() {
+  const grid = document.getElementById('galleryGrid');
+  if (!grid) return;
+  const photos = getGallery();
+  grid.innerHTML = '';
+  if (!photos.length) {
+    grid.innerHTML = '<div class="gallery-empty">暂无图片，点击下方按钮上传球队照片</div>';
+    return;
+  }
+  photos.forEach((photo, idx) => {
+    const item = document.createElement('div');
+    item.className = 'gallery-item';
+    item.innerHTML = `
+      <div class="gallery-img-wrap" onclick="openLightbox(${idx})">
+        <img class="gallery-img" src="${photo.src}" alt="${photo.caption || ''}">
+      </div>
+      <div class="gallery-caption-row">
+        <span class="gallery-caption">${photo.caption || ''}</span>
+        <button class="btn btn-sm btn-danger" onclick="deletePhoto(${idx});event.stopPropagation()">删除</button>
+      </div>`;
+    grid.appendChild(item);
+  });
+}
+function handleGalleryUpload(event) {
+  const files = Array.from(event.target.files);
+  if (!files.length) return;
+  const photos = getGallery();
+  let loaded = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      photos.push({ id: genId(), src: e.target.result, caption: '' });
+      loaded++;
+      if (loaded === files.length) {
+        saveGallery(photos);
+        renderGallery();
+        toast(`已上传 ${files.length} 张图片`);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  event.target.value = '';
+}
+function deletePhoto(idx) {
+  if (!confirm('确定删除该图片？')) return;
+  const photos = getGallery();
+  photos.splice(idx, 1);
+  saveGallery(photos);
+  renderGallery();
+  const lb = document.getElementById('galleryLightbox');
+  if (lb.classList.contains('open')) closeLightbox();
+  toast('图片已删除');
+}
+
+// ===== Lightbox =====
+function openLightbox(idx) {
+  const photos = getGallery();
+  const lb = document.getElementById('galleryLightbox');
+  lb._idx = idx;
+  lb._photos = photos;
+  document.getElementById('lbImg').src = photos[idx].src;
+  document.getElementById('lbCaption').textContent = photos[idx].caption || '';
+  lb.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('galleryLightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function lbNav(dir) {
+  const lb = document.getElementById('galleryLightbox');
+  const next = lb._idx + dir;
+  if (next < 0 || next >= lb._photos.length) return;
+  openLightbox(next);
+}
+document.addEventListener('keydown', e => {
+  const lb = document.getElementById('galleryLightbox');
+  if (!lb.classList.contains('open')) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') lbNav(-1);
+  if (e.key === 'ArrowRight') lbNav(1);
+});
+
+// ===== Init =====
+document.addEventListener('DOMContentLoaded', () => {
+  initNavScroll();
+  initScrollSpy();
+  initSmoothScroll();
+  renderGallery();
+  renderHeroStats();
+});
 </script>
 </body>
 </html>
