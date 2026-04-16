@@ -168,6 +168,10 @@ td{color:var(--text-primary)}
 .toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:8px;color:#fff;font-size:14px;z-index:700;opacity:0;transition:.3s;transform:translateY(-10px)}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast-ok{background:#1e8449}.toast-err{background:#c0392b}
+/* ===== LOCK ===== */
+.btn-lock{padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.15);color:#fff;font-size:13px;cursor:pointer;transition:.2s}
+.btn-lock:hover{background:rgba(255,255,255,.28)}
+body:not(.unlocked) .edit-only{display:none!important}
 .empty{text-align:center;padding:40px;color:var(--text-muted);font-size:14px}
 .flex-between{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .badge{display:inline-block;min-width:20px;text-align:center;padding:2px 6px;border-radius:10px;font-size:11px;font-weight:700;color:#fff;background:var(--accent-purple)}
@@ -210,7 +214,7 @@ td{color:var(--text-primary)}
   <div class="nav-inner">
     <a class="nav-brand" href="#hero">
       <span class="nav-crest-mini">⚽</span>
-      <span class="nav-brand-name" id="siteTitle" onclick="editTitle();event.preventDefault()" title="点击修改网站名称" style="cursor:pointer">清华男足数据网</span>
+      <span class="nav-brand-name" id="siteTitle" title="管理员可修改名称" style="cursor:default">清华男足数据网</span>
     </a>
     <ul class="nav-links">
       <li><a href="#hero"    class="nav-link active" data-section="hero">首页</a></li>
@@ -220,7 +224,8 @@ td{color:var(--text-primary)}
     </ul>
     <div class="nav-controls">
       <select id="seasonSelect" onchange="switchSeason()"></select>
-      <button onclick="openSeasonModal()">+ 新赛季</button>
+      <button class="edit-only" onclick="openSeasonModal()">+ 新赛季</button>
+      <button class="btn-lock" id="lockBtn" onclick="toggleLock()">🔒 编辑</button>
     </div>
     <button class="nav-hamburger" id="navHamburger" onclick="toggleMobileMenu()" aria-label="菜单" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -233,7 +238,7 @@ td{color:var(--text-primary)}
     <a href="#data"    data-section="data"    onclick="mobileNavClick(this)">数据中心</a>
     <div class="nav-mobile-controls">
       <select onchange="document.getElementById('seasonSelect').value=this.value;switchSeason()" id="seasonSelectMobile"></select>
-      <button onclick="openSeasonModal();closeMobileMenu()">+ 新赛季</button>
+      <button onclick="openSeasonModal();closeMobileMenu()" class="edit-only">+ 新赛季</button>
     </div>
   </div>
 </nav>
@@ -287,7 +292,7 @@ td{color:var(--text-primary)}
     <div class="gallery-grid" id="galleryGrid">
       <div class="gallery-empty">暂无图片，点击下方按钮上传球队照片</div>
     </div>
-    <div class="gallery-upload-wrap">
+    <div class="gallery-upload-wrap edit-only">
       <label class="btn btn-primary" for="galleryUploadInput">+ 上传图片</label>
       <input type="file" id="galleryUploadInput" accept="image/*" multiple style="display:none" onchange="handleGalleryUpload(event)">
     </div>
@@ -313,7 +318,7 @@ td{color:var(--text-primary)}
         <div class="card">
           <div class="flex-between">
             <h2>球员花名册</h2>
-            <button class="btn btn-primary" onclick="openPlayerModal()">+ 添加球员</button>
+            <button class="btn btn-primary edit-only" onclick="openPlayerModal()">+ 添加球员</button>
           </div>
           <div class="table-scroll">
             <table id="playerTable">
@@ -331,7 +336,7 @@ td{color:var(--text-primary)}
           </div>
           <div class="empty" id="emptyPlayers">暂无球员，点击上方按钮添加</div>
         </div>
-        <div class="card">
+        <div class="card edit-only">
           <h2>数据管理</h2>
           <div class="data-actions">
             <button class="btn btn-outline" onclick="exportData()">导出 JSON 备份</button>
@@ -346,7 +351,7 @@ td{color:var(--text-primary)}
         <div class="card">
           <div class="flex-between">
             <h2>比赛记录</h2>
-            <button class="btn btn-primary" onclick="openMatchModal()">+ 添加比赛</button>
+            <button class="btn btn-primary edit-only" onclick="openMatchModal()">+ 添加比赛</button>
           </div>
           <div class="table-scroll">
             <table id="matchTable">
@@ -533,6 +538,28 @@ td{color:var(--text-primary)}
 <script>
 const STORAGE_KEY = 'tsinghua_football_v1';
 const TEAM_NAME = '清华大学男足';
+const EDIT_PASSWORD = 'thu2025'; // 修改此处可更换密码
+
+// ===== Lock =====
+function toggleLock() {
+  if (document.body.classList.contains('unlocked')) {
+    document.body.classList.remove('unlocked');
+    document.getElementById('lockBtn').textContent = '🔒 编辑';
+    toast('已锁定编辑');
+  } else {
+    const pwd = prompt('请输入管理员密码：');
+    if (pwd === EDIT_PASSWORD) {
+      document.body.classList.add('unlocked');
+      document.getElementById('lockBtn').textContent = '🔓 锁定';
+      document.getElementById('siteTitle').title = '点击修改网站名称';
+      document.getElementById('siteTitle').style.cursor = 'pointer';
+      document.getElementById('siteTitle').onclick = function(e) { editTitle(); e.preventDefault(); };
+      toast('编辑模式已开启');
+    } else if (pwd !== null) {
+      toast('密码错误', false);
+    }
+  }
+}
 
 // ===== Firebase =====
 const firebaseConfig = {
@@ -712,8 +739,8 @@ function renderPlayers() {
       <td class="num">${p.height ? p.height + 'cm' : '-'}</td>
       <td class="num">${p.weight ? p.weight + 'kg' : '-'}</td>
       <td>
-        <button class="btn btn-sm btn-outline" onclick="openPlayerModal('${p.id}')">编辑</button>
-        <button class="btn btn-sm btn-danger" onclick="deletePlayer('${p.id}')">删除</button>
+        <button class="btn btn-sm btn-outline edit-only" onclick="openPlayerModal('${p.id}')">编辑</button>
+        <button class="btn btn-sm btn-danger edit-only" onclick="deletePlayer('${p.id}')">删除</button>
       </td>`;
     tbody.appendChild(tr);
   });
@@ -807,9 +834,9 @@ function renderMatches() {
       <td class="num">${m.htFor} - ${m.htAgainst}</td>
       <td><span class="tag tag-${resultTags[m.result]}">${resultLabels[m.result]}</span></td>
       <td>
-        <button class="btn btn-sm btn-success" onclick="openMatchStatsModal('${m.id}')">球员数据 ${statsCount ? '<span class=badge>' + statsCount + '</span>' : ''}</button>
-        <button class="btn btn-sm btn-outline" onclick="openMatchModal('${m.id}')">编辑</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteMatch('${m.id}')">删除</button>
+        <button class="btn btn-sm btn-success edit-only" onclick="openMatchStatsModal('${m.id}')">球员数据 ${statsCount ? '<span class=badge>' + statsCount + '</span>' : ''}</button>
+        <button class="btn btn-sm btn-outline edit-only" onclick="openMatchModal('${m.id}')">编辑</button>
+        <button class="btn btn-sm btn-danger edit-only" onclick="deleteMatch('${m.id}')">删除</button>
       </td>`;
     tbody.appendChild(tr);
   });
@@ -1288,7 +1315,7 @@ function renderGallery() {
       </div>
       <div class="gallery-caption-row">
         <span class="gallery-caption">${photo.caption || ''}</span>
-        <button class="btn btn-sm btn-danger" onclick="deletePhoto(${idx});event.stopPropagation()">删除</button>
+        <button class="btn btn-sm btn-danger edit-only" onclick="deletePhoto(${idx});event.stopPropagation()">删除</button>
       </div>`;
     grid.appendChild(item);
   });
